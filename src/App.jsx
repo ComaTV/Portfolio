@@ -1,18 +1,23 @@
 import React from 'react';
-import { Button, Container, ContainerExample } from 'mc-ui-comatv';
+import { 
+  Button, 
+  Container, 
+  Scrollbar
+} from 'mc-ui-comatv';
 
 function App() {
   return (
-    <div className='bg-black h-screen'>
-      <Container 
-        width="300px"
-        height="200px"
-        fontFamily="MinecraftTen"
-        padding="20px"
-        variant="card"
-        size="large"
+    <div className='bg-blue-500 h-screen w-screen'>
+      <div className='h-1'/>
+      <Container
       >
-        Continutul tau aici
+        <p>Welcome to Minecraft UI!</p>
+        <Button 
+          label="Click me!" 
+          onClick={() => alert('Hello!')}
+        />
+        <Scrollbar height="300px" grid={true} gridCols={3}>
+        </Scrollbar>
       </Container>
     </div>
   );
