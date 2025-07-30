@@ -1,24 +1,37 @@
 import React from 'react';
+import PanoramaBackground from './components/PanoramaBackground';
+
 import { 
-  Button, 
-  Container, 
-  Scrollbar
+  Container,
+  Button,
+  Scrollbar,
+  MessageBox,
+  ImageCard
 } from 'mc-ui-comatv';
 
 function App() {
   return (
-    <div className='bg-blue-500 h-screen w-screen'>
-      <div className='h-1'/>
-      <Container
-      >
-        <p>Welcome to Minecraft UI!</p>
-        <Button 
-          label="Click me!" 
-          onClick={() => alert('Hello!')}
-        />
-        <Scrollbar height="300px" grid={true} gridCols={3}>
-        </Scrollbar>
-      </Container>
+    <div className='relative h-screen w-screen overflow-hidden'>
+      <PanoramaBackground />
+      <div className="flex gap-2 flex-wrap">
+          <Button label="Green Button"/>
+          <Scrollbar height="400px" width="1000px" variant="vertical" grid={true} gridCols={3}>
+            {Array.from({ length: 12 }, (_, i) => (
+              <ImageCard
+                imageSrc={"panorama/panorama_0.png"}
+                label="Title"
+                description="description"
+                iconImages={[
+                  "techno/mongo.webp",
+                  "techno/js.webp",
+                  "techno/ts.webp",
+                  "techno/css.webp"
+                ]}
+                onClick={() => alert("You clicked on the React card!")}
+              />
+            ))}
+          </Scrollbar>
+      </div>
     </div>
   );
 }
