@@ -1,36 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PanoramaBackground from './components/PanoramaBackground';
+import TechTogglePanel from './components/TechTogglePanel';
+import ProjectsView from './components/ProjectsView';
+import { projectsData } from './server/data';
 
-import { 
-  Container,
-  Button,
-  Scrollbar,
-  MessageBox,
-  ImageCard
-} from 'mc-ui-comatv';
+const allTechnologies = Array.from(
+  new Set(projectsData.flatMap(project => project.technologies))
+).map(tech => ({
+  label: tech,
+  icon: `techno/${tech.toLowerCase().replace('.', '').replace(' ', '')}.webp`
+}));
 
 function App() {
+  const [selectedTechs, setSelectedTechs] = useState([]);
+
+  const handleToggleChange = (tech, isChecked) => {
+    setSelectedTechs(prev =>
+      isChecked ? [...prev, tech] : prev.filter(t => t !== tech)
+    );
+  };
+
+  const filteredProjects = selectedTechs.length
+    ? projectsData.filter(project =>
+        selectedTechs.some(tech => project.technologies.includes(tech))
+      )
+    : projectsData;
+
   return (
-    <div className='relative h-screen w-screen overflow-hidden'>
+    <div className="relative h-screen w-screen overflow-hidden">
       <PanoramaBackground />
-      <div className="flex gap-2 flex-wrap">
-          <Button label="Green Button"/>
-          <Scrollbar height="400px" width="1000px" variant="vertical" grid={true} gridCols={3}>
-            {Array.from({ length: 12 }, (_, i) => (
-              <ImageCard
-                imageSrc={"panorama/panorama_0.png"}
-                label="Title"
-                description="description"
-                iconImages={[
-                  "techno/mongo.webp",
-                  "techno/js.webp",
-                  "techno/ts.webp",
-                  "techno/css.webp"
-                ]}
-                onClick={() => alert("You clicked on the React card!")}
-              />
-            ))}
-          </Scrollbar>
+
+      <div className="absolute inset-0 p-4 flex justify-between items-start gap-4">
+        <TechTogglePanel
+          allTechnologies={allTechnologies}
+          selectedTechs={selectedTechs}
+          onToggleChange={handleToggleChange}
+        />
+        <ProjectsView projects={filteredProjects} />
       </div>
     </div>
   );
