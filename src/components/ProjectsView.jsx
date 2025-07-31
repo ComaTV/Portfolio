@@ -2,8 +2,7 @@ import { Scrollbar, ImageCard } from 'mc-ui-comatv';
 
 const ProjectsView = ({ projects }) => {
   return (
-    <div className="max-w-[80%]">
-      <Scrollbar height="95vh" variant="vertical" grid={true} gridCols={3}>
+      <Scrollbar height="95vh" width="80%"  variant="vertical" grid={true} gridCols={3}>
         {projects.map((project) => (
           <ImageCard
             key={project.id}
@@ -17,7 +16,6 @@ const ProjectsView = ({ projects }) => {
           />
         ))}
       </Scrollbar>
-    </div>
   );
 };
 
