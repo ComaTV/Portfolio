@@ -1,4 +1,4 @@
-import { Container, Scrollbar, Toggle } from 'mc-ui-comatv';
+import { Container, Scrollbar, Checkbox } from 'mc-ui-comatv';
 
 const TechTogglePanel = ({ allTechnologies, selectedTechs, onToggleChange }) => {
   return (
@@ -12,7 +12,8 @@ const TechTogglePanel = ({ allTechnologies, selectedTechs, onToggleChange }) => 
                 <img src={item.icon} alt={item.label} className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
                 <span className="text-xs sm:text-sm flex-1 min-w-0 truncate">{item.label}</span>
                 <div className="ml-auto flex-shrink-0">
-                  <Toggle
+                  <Checkbox
+                    label=""
                     checked={selectedTechs.includes(item.label)}
                     onChange={(isChecked) => onToggleChange(item.label, isChecked)}
                   />

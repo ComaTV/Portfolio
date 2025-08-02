@@ -13,12 +13,9 @@ const Navbar = () => {
   return (
     <Container variant="white" style={{ width: '100%', margin: 0, transform: 'translateX(0)' }}>
       <div className="flex justify-between items-center h-16">
-            {/* Logo */}
             <h1 className="text-2xl text-gray-800 minecraft-font">
                 Coma TV
             </h1>
-
-            {/* Desktop Menu */}
             <div className="hidden md:block">
               <div className="flex items-baseline space-x-4">
                 {menuItems.map((item) => (
