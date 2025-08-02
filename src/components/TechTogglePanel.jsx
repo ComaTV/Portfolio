@@ -2,16 +2,16 @@ import { Container, Scrollbar, Toggle } from 'mc-ui-comatv';
 
 const TechTogglePanel = ({ allTechnologies, selectedTechs, onToggleChange }) => {
   return (
-    <div className="max-w-[20%]">
+    <div className="w-full lg:w-1/4 xl:w-1/5 min-w-[280px] max-w-full lg:max-w-none">
       <Container>
-        <h2 className="text-white mb-4">Technologies</h2>
-        <Scrollbar height="80vh">
+        <p className="text-white mb-2 sm:mb-4 text-lg sm:text-xl ">Technologies</p>
+        <Scrollbar height="60vh sm:70vh lg:80vh">
           <div className="pr-2">
             {allTechnologies.map((item, i) => (
-              <div key={i} className="flex items-center gap-2 py-1">
-                <img src={item.icon} alt={item.label} className="w-6 h-6" />
-                <span className="text-sm text-white">{item.label}</span>
-                <div className="ml-auto">
+              <div key={i} className="flex items-center gap-2 py-1 sm:py-2">
+                <img src={item.icon} alt={item.label} className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+                <span className="text-xs sm:text-sm flex-1 min-w-0 truncate">{item.label}</span>
+                <div className="ml-auto flex-shrink-0">
                   <Toggle
                     checked={selectedTechs.includes(item.label)}
                     onChange={(isChecked) => onToggleChange(item.label, isChecked)}
