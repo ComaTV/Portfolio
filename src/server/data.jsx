@@ -102,7 +102,7 @@ export const projectsData = [
     title: "Minecraft Java Plugin",
     description: "Plugin pentru servere Minecraft cu funcții avansate",
     image: "panorama/panorama_0.png",
-    technologies: ["java", "MongoDB"],
+    technologies: ["Java", "MongoDB"],
     category: "Minecraft Java",
     special: true
   },
