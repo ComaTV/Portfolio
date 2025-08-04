@@ -115,3 +115,17 @@ export const projectsData = [
     category: "Minecraft Bedrock"
   }
 ];
+
+export const profileData = {
+  name: "ComaTV",
+  status: "Online",
+  avatar: "logo192.png",
+  description: "Just a guy who likes to code",
+  location: "US",
+  experience: "3+ years",
+  social: {
+    github: "https://github.com/ComaTV4776",
+    linkedin: "https://linkedin.com/in/ComaTV4776",
+    discord: "ComaTV#4776"
+  }
+};

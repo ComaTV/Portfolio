@@ -50,7 +50,6 @@ const ProjectSection = () => {
     projectsData.forEach(project => {
       if (selectedTechs.some(tech => project.technologies.includes(tech))) {
         categoriesWithSelectedTechs.add(project.category);
-        // Dacă proiectul este special, adaugă și categoria "Special"
         if (project.special) {
           categoriesWithSelectedTechs.add('Special');
         }
