@@ -17,7 +17,7 @@ const ProjectsView = ({ projects }) => {
       >
         {projects.map((project) => {
           let iconImages = project.technologies.map(tech =>
-            `techno/${tech.toLowerCase().replace('.', '').replace(' ', '')}.webp`
+            `techno/${tech.name.toLowerCase().replace('.', '').replace(' ', '')}.webp`
           );
           
           if (project.special) {

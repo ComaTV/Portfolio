@@ -5,10 +5,10 @@ import ProjectsView from './ProjectsView';
 import { projectsData } from '../server/data';
 
 const allTechnologies = Array.from(
-  new Set(projectsData.flatMap(project => project.technologies))
-).map(tech => ({
-  label: tech,
-  icon: `techno/${tech.toLowerCase().replace('.', '').replace(' ', '')}.webp`
+  new Set(projectsData.flatMap(project => project.technologies.map(tech => tech.name)))
+).map(techName => ({
+  label: techName,
+  icon: `techno/${techName.toLowerCase().replace('.', '').replace(' ', '')}.webp`
 }));
 
 // Adaugă categoria "Special" la începutul listei
@@ -33,7 +33,7 @@ const ProjectSection = () => {
       const isSpecialAndSpecialSelected = project.special && selectedCategories.includes('Special');
       
       if (isInSelectedCategory || isSpecialAndSpecialSelected) {
-        project.technologies.forEach(tech => techsInSelectedCategories.add(tech));
+        project.technologies.forEach(tech => techsInSelectedCategories.add(tech.name));
       }
     });
     
@@ -48,7 +48,7 @@ const ProjectSection = () => {
     
     const categoriesWithSelectedTechs = new Set();
     projectsData.forEach(project => {
-      if (selectedTechs.some(tech => project.technologies.includes(tech))) {
+      if (selectedTechs.some(tech => project.technologies.some(projectTech => projectTech.name === tech))) {
         categoriesWithSelectedTechs.add(project.category);
         if (project.special) {
           categoriesWithSelectedTechs.add('Special');
@@ -87,7 +87,7 @@ const ProjectSection = () => {
 
   const filteredProjects = projectsData.filter(project => {
     const matchesTech = selectedTechs.length === 0 || 
-      selectedTechs.some(tech => project.technologies.includes(tech));
+      selectedTechs.some(tech => project.technologies.some(projectTech => projectTech.name === tech));
     
     const matchesCategory = selectedCategories.length === 0 || 
       selectedCategories.includes(project.category) ||

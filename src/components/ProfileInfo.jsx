@@ -14,7 +14,7 @@ const ProfileInfo = () => {
           canvas: canvasRef.current,
           width: 300,
           height: 400,
-          skin: "https://mc-heads.net/skin/ComaTV"
+          skin: `https://mc-heads.net/skin/${profileData.name}`
         });
 
         skinViewerRef.current.animation = new skinview3d.IdleAnimation();
@@ -34,55 +34,82 @@ const ProfileInfo = () => {
   return (
     <div>
       <Container>
-        <div className="flex items-start space-x-6">
-          <div className="relative">
-            <div className="w-24 h-24 bg-black p-0.5">
-              <img src={profileData.avatar} alt={profileData.name} className="w-full h-full object-cover" />
-            </div>
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 border-2 border-green-300"></div>
-          </div>
-          <div className="flex-1">
-            <div className="mb-4">
-              <h1 className="text-2xl text-white mb-1">{profileData.name}</h1>
-              <p className="text-sm text-gray-400">{profileData.status}</p>
-              <p className="text-sm text-gray-300 mt-1">{profileData.description}</p>
-              <div className="flex items-center space-x-4 mt-2 text-xs text-gray-400">
-                <span>📍 {profileData.location}</span>
-                <span>💼 {profileData.experience}</span>
+                 <div className="flex items-start space-x-6">
+           {/* Left Side - Profile Data */}
+           <div className="flex-1 flex flex-col space-y-4">
+             <div className="flex items-start space-x-4">
+               <div className="relative">
+                 <div className="w-24 h-24 bg-black p-0.5">
+                   <img src={profileData.avatar} alt={profileData.name} className="w-full h-full object-cover" />
+                 </div>
+                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 border-2 border-green-300"></div>
+               </div>
+               <div className="flex-1">
+                 <h1 className="text-2xl text-white mb-1">{profileData.name}</h1>
+                 <p className="text-sm text-gray-400">{profileData.status}</p>
+                 <div className="flex items-center space-x-4 mt-2 text-xs text-gray-400">
+                   <span className="flex items-center space-x-1">
+                     <img src="techno/internet.webp" alt="Location" className="w-4 h-4 object-contain" />
+                     <span>{profileData.location}</span>
+                   </span>
+                   <span className="flex items-center space-x-1">
+                     <img src="techno/chest.webp" alt="Experience" className="w-4 h-4 object-contain" />
+                     <span>{profileData.experience}</span>
+                   </span>
+                 </div>
+               </div>
+             </div>
+             
+              <p className="text-sm text-gray-300 break-words">{profileData.description}</p>
+              
+              <div className="flex items-center justify-start space-x-3">
+                <a href={profileData.social.github} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                  <img src="techno/github.webp" alt="GitHub" className="w-7 h-7 object-contain" />
+                </a>
+                <a href={profileData.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                  <img src="techno/linkdl.webp" alt="LinkedIn" className="w-7 h-7 object-contain" />
+                </a>
+                <a href={profileData.social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                  <img src="techno/instagram.webp" alt="Instagram" className="w-7 h-7 object-contain" />
+                </a>
+                <span className="flex items-center space-x-1 text-gray-400">
+                  <img src="techno/discord.webp" alt="Discord" className="w-7 h-7 object-contain" />
+                  <span className="text-xs">{profileData.social.discord}</span>
+                </span>
+              </div>
+              
+          <div className=" border-t border-gray-600"/>
+                <div>
+                 <h3 className="text-sm text-white mb-2">Technologies I use:</h3>
+                 <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const allTechnologies = projectsData.flatMap(project => project.technologies);
+                    const uniqueTechnologies = [...new Set(allTechnologies.map(tech => tech.name))];
+                    
+                    return uniqueTechnologies.map((techName) => {
+                      const iconSrc = `techno/${techName.toLowerCase().replace('.', '').replace(' ', '')}.webp`;
+                      return (
+                        <img 
+                          key={techName}
+                          src={iconSrc} 
+                          alt={techName} 
+                          className="w-6 h-6 object-contain"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      );
+                    });
+                  })()}
+                </div>
               </div>
             </div>
+            
+            {/* Right Side - Canvas */}
+            <div className="flex justify-center">
+              <canvas ref={canvasRef}/>
+            </div>
           </div>
-          <div className="flex justify-center">
-            <canvas ref={canvasRef}/>
-          </div>
-        </div>
-        <div className="mt-6 pt-4 border-t border-gray-600">
-          <h3 className="text-lg text-white mb-3">Specialization</h3>
-          <p className="text-sm text-gray-300 mb-4">{profileData.specialization}</p>
-          
-          <h3 className="text-lg text-white mb-3">Technologies</h3>
-          <div className="flex flex-wrap gap-3">
-            {(() => {
-              const allTechnologies = projectsData.flatMap(project => project.technologies);
-              const uniqueTechnologies = [...new Set(allTechnologies)];
-              
-              return uniqueTechnologies.map((tech) => {
-                const iconSrc = `techno/${tech.toLowerCase().replace('.', '').replace(' ', '')}.webp`;
-                return (
-                  <img 
-                    key={tech}
-                    src={iconSrc} 
-                    alt={tech} 
-                    className="w-8 h-8 object-contain"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                );
-              });
-            })()}
-          </div>
-        </div>
       </Container>
     </div>
   );
