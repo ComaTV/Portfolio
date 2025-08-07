@@ -171,6 +171,18 @@ export const projectsData = [
       { name: "json", color: "gray" }
     ],
     category: "Minecraft Bedrock"
+  },
+  {
+    id: 15,
+    title: "Discord Bot Utility",
+    description: "Bot de Discord pentru moderare, muzică și integrare cu diverse API-uri.",
+    image: "panorama/panorama_2.png",
+    technologies: [
+      { name: "node", color: "green" },
+      { name: "discord", color: "blue" },
+      { name: "json", color: "gray" }
+    ],
+    category: "Discord Bot"
   }
 ];
 
@@ -186,4 +198,14 @@ export const profileData = {
     linkedin: "https://linkedin.com/in/ComaTV4776",
     discord: "ComaTV#4776"
   }
+};
+
+export const categoryColors = {
+  'Web Development': 'cyan',
+  'Mobile App': 'white',
+  'Desktop App': 'blue',
+  'Minecraft Java': 'orange',
+  'Minecraft Bedrock': 'green',
+  'Discord Bot': 'purple',
+  'Special': 'yellow',
 };

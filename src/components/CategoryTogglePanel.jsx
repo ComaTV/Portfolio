@@ -1,4 +1,5 @@
 import { Container, Scrollbar, Toggle, Checkbox } from 'mc-ui-comatv';
+import { categoryColors } from '../server/data.jsx';
 
 const CategoryTogglePanel = ({ allCategories, selectedCategories, onToggleChange }) => {
   return (
@@ -24,7 +25,7 @@ const CategoryTogglePanel = ({ allCategories, selectedCategories, onToggleChange
                   />
                 )}
                 <span className={`text-xs sm:text-sm flex-1 min-w-0 truncate ${
-                  category === 'Special' ? 'text-yellow-300 minecraft-font' : ''
+                  category === 'Special' ? 'text-yellow-300 minecraft-font' : `text-${categoryColors[category] || 'green'}-400`
                 }`}>
                   {category}
                 </span>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, LoadingBar,Button , Scrollbar } from 'mc-ui-comatv';
-import { projectsData } from '../server/data.jsx';
+import { projectsData, categoryColors } from '../server/data.jsx';
 import { CircularChart3DComponent, CircularChart3DSeriesCollectionDirective, CircularChart3DSeriesDirective, PieSeries3D, CircularChartDataLabel3D, CircularChartLegend3D, Inject } from '@syncfusion/ej2-react-charts';
 
 const TechnologyStats = () => {
@@ -14,14 +14,14 @@ const TechnologyStats = () => {
       case 'yellow': return 'text-yellow-400';
       case 'purple': return 'text-purple-400';
       case 'cyan': return 'text-cyan-400';
-      case 'amber': return 'text-amber-400';
+      case 'orange': return 'text-amber-400';
       case 'white': return 'text-gray-200';
       case 'gray': return 'text-gray-400';
       default: return 'text-gray-300';
     }
   };
   return (
-    <Container>
+    <Container className="w-full">
       <div className="flex space-x-2 mb-6">
         <Button
           label="Technologies"
@@ -34,16 +34,14 @@ const TechnologyStats = () => {
           onClick={() => setActiveTab('platforms')}
         />
       </div>
-      
-      <div className="flex items-start space-x-8">
-        <div className="flex-1">
+      <div className="flex flex-col md:flex-row items-start md:space-x-8 space-y-8 md:space-y-0 w-full">
+        <div className="w-full md:flex-1 md:w-auto">
           <h4 className="text-md font-medium text-gray-300 mb-3">
             {activeTab === 'technologies' ? 'Technology Distribution' : 'Platform Distribution'}
           </h4>
           <div className="flex justify-center">
             {(() => {
               let  pieData;
-              
               if (activeTab === 'technologies') {
                 const allTechnologies = projectsData.flatMap(project => project.technologies);
                 const techCount = {};
@@ -51,7 +49,6 @@ const TechnologyStats = () => {
                   const techName = tech.name;
                   techCount[techName] = (techCount[techName] || 0) + 1;
                 });
-                
                 const totalProjects = projectsData.length;
                 pieData = Object.entries(techCount)
                   .map(([techName, count]) => {
@@ -69,20 +66,30 @@ const TechnologyStats = () => {
                 projectsData.forEach(project => {
                   categoryCount[project.category] = (categoryCount[project.category] || 0) + 1;
                 });
-                
                 const totalProjects = projectsData.length;
                 pieData = Object.entries(categoryCount)
                   .map(([category, count]) => {
                     const percentage = Math.round((count / totalProjects) * 100);
+                    const color = categoryColors[category] || '#3B82F6';
+                    // Map color name to Tailwind color hex if needed
+                    const colorMap = {
+                      green: '#22c55e',
+                      blue: '#3b82f6',
+                      purple: '#a78bfa',
+                      amber: '#f59e42',
+                      cyan: '#22d3ee',
+                      yellow: '#fde047',
+                      white: '#e5e7eb',
+                      orange: '#f59e42',
+                    };
                     return {
                       x: category,
                       y: percentage,
-                      fill: '#3B82F6'
+                      fill: colorMap[color] || color
                     };
                   })
                   .sort((a, b) => b.y - a.y);
               }
-              
               return (
                 <CircularChart3DComponent
                   id="pie-chart"
@@ -99,9 +106,9 @@ const TechnologyStats = () => {
                       xName="x"
                       yName="y"
                       pointColorMapping="fill"
-                                          dataLabel={{
-                      visible: false
-                    }}
+                      dataLabel={{
+                        visible: false
+                      }}
                     />
                   </CircularChart3DSeriesCollectionDirective>
                 </CircularChart3DComponent>
@@ -109,7 +116,7 @@ const TechnologyStats = () => {
             })()}
           </div>
         </div>
-        <div className="w-80">
+        <div className="w-full md:w-80">
           <h4 className="text-md font-medium text-gray-300 mb-3">
             {activeTab === 'technologies' ? 'Technology Usage' : 'Platform Usage'}
           </h4>
@@ -128,7 +135,6 @@ const TechnologyStats = () => {
                   const techName = tech.name;
                   techCount[techName] = (techCount[techName] || 0) + 1;
                 });
-                
                 const totalProjects = projectsData.length;
                 const techPercentages = Object.entries(techCount)
                   .map(([techName, count]) => {
@@ -141,7 +147,6 @@ const TechnologyStats = () => {
                     };
                   })
                   .sort((a, b) => b.percentage - a.percentage);
-                
                 return techPercentages.map(({ name, percentage, variant, icon }) => (
                   <div key={name} className="space-y-2 mb-4">
                     <div className="flex items-center justify-between">
@@ -166,22 +171,24 @@ const TechnologyStats = () => {
                 projectsData.forEach(project => {
                   categoryCount[project.category] = (categoryCount[project.category] || 0) + 1;
                 });
-                
                 const totalProjects = projectsData.length;
                 const categoryPercentages = Object.entries(categoryCount)
-                  .map(([category, count]) => ({
-                    name: category,
-                    percentage: Math.round((count / totalProjects) * 100)
-                  }))
+                  .map(([category, count]) => {
+                    const color = categoryColors[category] || 'green';
+                    return {
+                      name: category,
+                      percentage: Math.round((count / totalProjects) * 100),
+                      variant: color
+                    };
+                  })
                   .sort((a, b) => b.percentage - a.percentage);
-                
-                return categoryPercentages.map(({ name, percentage }) => (
+                return categoryPercentages.map(({ name, percentage, variant }) => (
                   <div key={name} className="space-y-2 mb-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-300 text-sm">{name}</span>
-                      <span className="text-green-400 text-sm font-medium">{percentage}%</span>
+                      <span className={`text-sm font-medium ${getTextColor(variant)}`}>{name}</span>
+                      <span className={`text-sm font-medium ${getTextColor(variant)}`}>{percentage}%</span>
                     </div>
-                    <LoadingBar progress={percentage} variant="green" />
+                    <LoadingBar progress={percentage} variant={variant} />
                   </div>
                 ));
               }
