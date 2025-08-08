@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Container } from 'mc-ui-comatv';
-import { projectsData, profileData, categoryColors } from '../server/data.jsx';
+import { projectsData, profileData, categoryColors } from '../../server/data.jsx';
 import * as skinview3d from 'skinview3d';
 
 const ProfileInfo = () => {
@@ -75,7 +75,7 @@ const ProfileInfo = () => {
                 <span className="text-xs">{profileData.social.discord}</span>
               </span>
             </div>
-            <div className=" border-t border-gray-600"/>
+            <div className="border-t border-gray-600"/>
             <div>
               <h3 className="text-sm text-white mb-2">Technologies I use:</h3>
               <div className="flex flex-wrap gap-2">

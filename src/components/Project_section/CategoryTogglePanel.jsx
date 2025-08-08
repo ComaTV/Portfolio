@@ -1,5 +1,5 @@
 import { Container, Scrollbar, Toggle, Checkbox } from 'mc-ui-comatv';
-import { categoryColors } from '../server/data.jsx';
+import { categoryColors } from '../../server/data.jsx';
 
 const CategoryTogglePanel = ({ allCategories, selectedCategories, onToggleChange }) => {
   return (

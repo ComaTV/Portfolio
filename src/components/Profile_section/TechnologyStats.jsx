@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, LoadingBar,Button , Scrollbar } from 'mc-ui-comatv';
-import { projectsData, categoryColors } from '../server/data.jsx';
+import { projectsData, categoryColors } from '../../server/data.jsx';
 import { CircularChart3DComponent, CircularChart3DSeriesCollectionDirective, CircularChart3DSeriesDirective, PieSeries3D, CircularChartDataLabel3D, CircularChartLegend3D, Inject } from '@syncfusion/ej2-react-charts';
 
 const TechnologyStats = () => {

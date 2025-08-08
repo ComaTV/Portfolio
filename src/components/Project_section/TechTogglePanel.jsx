@@ -2,10 +2,10 @@ import { Container, Scrollbar, Checkbox } from 'mc-ui-comatv';
 
 const TechTogglePanel = ({ allTechnologies, selectedTechs, onToggleChange }) => {
   return (
-    <div className="w-full lg:w-1/4 xl:w-1/5 min-w-[280px] max-w-full lg:max-w-none">
-      <Container>
+    <div className="w-full lg:w-1/4 xl:w-1/5 min-w-[280px] max-w-full lg:max-w-none h-full">
+      <Container className="h-full">
         <p className="text-white mb-2 sm:mb-4 text-lg sm:text-xl ">Technologies</p>
-        <Scrollbar height="60vh sm:70vh lg:80vh">
+        <Scrollbar height="calc(100% - 60px)">
           <div className="pr-2">
             {allTechnologies.map((item, i) => (
               <div key={i} className="flex items-center gap-2 py-1 sm:py-2">

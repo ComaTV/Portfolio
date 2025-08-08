@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import TechTogglePanel from './TechTogglePanel';
-import CategoryTogglePanel from './CategoryTogglePanel';
-import ProjectsView from './ProjectsView';
+import TechTogglePanel from './Project_section/TechTogglePanel';
+import CategoryTogglePanel from './Project_section/CategoryTogglePanel';
+import ProjectsView from './Project_section/ProjectsView';
 import { projectsData } from '../server/data';
 
 const allTechnologies = Array.from(
