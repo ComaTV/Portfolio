@@ -80,36 +80,47 @@ const ProjectSection = () => {
   });
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-full w-full p-4 gap-4">
-      <div className="lg:hidden flex flex-col gap-4">
-        <CategoryTogglePanel
-          allCategories={availableCategories}
-          selectedCategories={selectedCategories}
-          onToggleChange={handleCategoryToggleChange}
-        />
-        <TechTogglePanel
-          allTechnologies={availableTechnologies}
-          selectedTechs={selectedTechs}
-          onToggleChange={handleTechToggleChange}
+    <div className="min-h-screen flex flex-col">
+      
+      <div className="w-full flex justify-center mt-40">
+        <img 
+          src="/text/Project.webp" 
+          alt="Projects" 
+          className="max-w-full h-auto"
         />
       </div>
-      <div className="hidden lg:flex lg:flex-row gap-4 w-full">
-        <TechTogglePanel
-          allTechnologies={availableTechnologies}
-          selectedTechs={selectedTechs}
-          onToggleChange={handleTechToggleChange}
-        />
-        <div className="flex-1">
+      <div className="flex flex-col lg:flex-row min-h-full w-full p-4 gap-4">
+        
+        <div className="lg:hidden flex flex-col gap-4">
+          <CategoryTogglePanel
+            allCategories={availableCategories}
+            selectedCategories={selectedCategories}
+            onToggleChange={handleCategoryToggleChange}
+          />
+          <TechTogglePanel
+            allTechnologies={availableTechnologies}
+            selectedTechs={selectedTechs}
+            onToggleChange={handleTechToggleChange}
+          />
+        </div>
+        <div className="hidden lg:flex lg:flex-row gap-4 w-full">
+          <TechTogglePanel
+            allTechnologies={availableTechnologies}
+            selectedTechs={selectedTechs}
+            onToggleChange={handleTechToggleChange}
+          />
+          <div className="flex-1">
+            <ProjectsView projects={filteredProjects} />
+          </div>
+          <CategoryTogglePanel
+            allCategories={availableCategories}
+            selectedCategories={selectedCategories}
+            onToggleChange={handleCategoryToggleChange}
+          />
+        </div>
+        <div className="lg:hidden">
           <ProjectsView projects={filteredProjects} />
         </div>
-        <CategoryTogglePanel
-          allCategories={availableCategories}
-          selectedCategories={selectedCategories}
-          onToggleChange={handleCategoryToggleChange}
-        />
-      </div>
-      <div className="lg:hidden">
-        <ProjectsView projects={filteredProjects} />
       </div>
     </div>
   );

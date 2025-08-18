@@ -3,6 +3,7 @@ import PanoramaBackground from './components/PanoramaBackground';
 import ProfileSection from './components/ProfileSection';
 import ProjectSection from './components/ProjectSection';
 import { Scrollbar } from 'mc-ui-comatv';
+import CollaboratorsSection from './components/CollaboratorsSection';
 
 function App() {
 
@@ -14,6 +15,7 @@ function App() {
         <Scrollbar height="100%" width="100%" variant="vertical" style={{ padding: 0, margin: 0, gap: 0, transform: 'translateX(0)' }}>
           <ProfileSection />
           <ProjectSection />
+          <CollaboratorsSection />
         </Scrollbar>
       </div>
       </div>

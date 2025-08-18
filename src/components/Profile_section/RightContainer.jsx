@@ -142,6 +142,7 @@ const RightContainer = () => {
           {activeTab === 'newProjects' && (
             <div className="flex items-center justify-between h-[70vh] w-full">
               <Button 
+                variant="green"
                 label="‹"
                 width={60}       
                 height={'90%'}
@@ -153,6 +154,7 @@ const RightContainer = () => {
                 <div className="flex-1 flex items-center justify-center text-gray-400">No projects</div>
               )}
               <Button 
+                variant="green"
                 label="›"
                 width={60}                
                 height={'90%'}
@@ -163,7 +165,8 @@ const RightContainer = () => {
           
           {activeTab === 'bigProjects' && (
             <div className="flex items-center justify-between h-[70vh] w-full">
-              <Button 
+              <Button
+                variant="purple"
                 label="‹"
                 width={60}
                 height={'90%'}
@@ -175,6 +178,7 @@ const RightContainer = () => {
                 <div className="flex-1 flex items-center justify-center text-gray-400">No big projects</div>
               )}
               <Button 
+                variant="purple"
                 label="›"
                 width={60}
                 height={'90%'}

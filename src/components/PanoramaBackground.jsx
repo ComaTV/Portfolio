@@ -1,4 +1,3 @@
-// components/PanoramaBackground.jsx
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";

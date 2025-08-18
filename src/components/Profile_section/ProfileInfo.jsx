@@ -35,18 +35,21 @@ const ProfileInfo = () => {
     <div className="w-full">
       <Container>
         <div className="flex flex-col-reverse md:flex-row items-start md:space-x-6 space-y-6 md:space-y-0 w-full">
-          {/* Left Side - Profile Data */}
           <div className="w-full md:flex-1 flex flex-col space-y-4">
             <div className="flex items-start space-x-4">
               <div className="relative">
                 <div className="w-24 h-24 bg-black p-0.5">
                   <img src={profileData.avatar} alt={profileData.name} className="w-full h-full object-cover" />
                 </div>
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 border-2 border-green-300"></div>
+                {profileData.status && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 border-2 border-green-300"></div>
+                )}
               </div>
               <div className="flex-1">
                 <h1 className="text-2xl text-white mb-1">{profileData.name}</h1>
-                <p className="text-sm text-gray-400">{profileData.status}</p>
+                <p className={`text-sm ${profileData.status ? 'text-green-500' : 'text-red-500'}`}>
+                  {profileData.status ? 'Online' : 'Offline'}
+                </p>
                 <div className="flex items-center space-x-4 mt-2 text-xs text-gray-400">
                   <span className="flex items-center space-x-1">
                     <img src="techno/internet.webp" alt="Location" className="w-4 h-4 object-contain" />
@@ -99,7 +102,6 @@ const ProfileInfo = () => {
                 })()}
               </div>
             </div>
-            {/* Platforme/Categorii */}
             <div>
               <h3 className="text-sm text-white mb-2">Platforms I develop on:</h3>
               <div className="flex flex-wrap gap-2">

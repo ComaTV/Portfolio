@@ -11,7 +11,8 @@ export const projectsData = [
     ],
     category: "Web Development",
     special: true,
-    date: "2024-01-15"
+    date: "2024-01-15",
+    collaboration: "Chelsonia"
   },
   {
     id: 2,
@@ -53,7 +54,8 @@ export const projectsData = [
     ],
     category: "Web Development",
     special: true,
-    date: "2024-01-30"
+    date: "2024-01-30",
+    collaboration: "Athur"
   },
   {
     id: 5,
@@ -172,7 +174,8 @@ export const projectsData = [
     ],
     category: "Minecraft Java",
     special: true,
-    date: "2024-03-15"
+    date: "2024-03-15",
+    collaboration: "Ore"
   },
   {
     id: 14,
@@ -322,7 +325,8 @@ export const projectsData = [
     ],
     category: "Web Development",
     special: true,
-    date: "2024-05-10"
+    date: "2024-05-10",
+    collaboration: "Chelsonia"
   },
   {
     id: 25,
@@ -363,7 +367,8 @@ export const projectsData = [
     ],
     category: "Web Development",
     special: true,
-    date: "2024-12-05"
+    date: "2024-12-05",
+    collaboration: "Athur"
   },
   {
     id: 28,
@@ -406,13 +411,49 @@ export const projectsData = [
     ],
     category: "Web Development",
     special: true,
-    date: "2024-12-20"
+    date: "2024-12-20",
+    collaboration: "Ore"
   }
 ];
 
+export const collaborators = [
+  {
+    id: 1,
+    title: "Chelsonia",
+    description: "SMP server",
+    image: "panorama/panorama_0.png",
+    social: {
+      github: "https://github.com/ComaTV4776",
+      linkedin: "https://linkedin.com/in/ComaTV4776",
+      discord: "ComaTV#4776"
+    }
+  },
+  {
+    id: 2,
+    title: "Athur",
+    description: "SMP server",
+    image: "panorama/panorama_0.png",
+    social: {
+      github: "https://github.com/ComaTV4776",
+      linkedin: "https://linkedin.com/in/ComaTV4776",
+      discord: "ComaTV#4776"
+    }
+  },
+  {
+    id: 3,
+    title: "Ore",
+    description: "Marketplace",
+    image: "panorama/panorama_0.png",
+    social: {
+      github: "https://github.com/ComaTV4776",
+      linkedin: "https://linkedin.com/in/ComaTV4776",
+      discord: "ComaTV#4776"
+    }
+  }
+]
 export const profileData = {
   name: "ComaTV",
-  status: "Online",
+  status: false,
   avatar: "logo192.png",
   description: "Just a guy who likes to code",
   location: "US",
