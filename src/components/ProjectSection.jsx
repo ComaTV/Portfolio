@@ -11,7 +11,6 @@ const allTechnologies = Array.from(
   icon: `techno/${techName.toLowerCase().replace('.', '').replace(' ', '')}.webp`
 }));
 
-// Adaugă categoria "Special" la începutul listei
 const allCategories = ['Special', ...Array.from(
   new Set(projectsData.map(project => project.category))
 )];
@@ -20,32 +19,25 @@ const ProjectSection = () => {
   const [selectedTechs, setSelectedTechs] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
-  // Funcție pentru a calcula tehnologiile disponibile bazate pe categoriile selectate
   const availableTechnologies = useMemo(() => {
     if (selectedCategories.length === 0) {
       return allTechnologies;
     }
-    
     const techsInSelectedCategories = new Set();
     projectsData.forEach(project => {
-      // Verifică dacă proiectul este în categoria selectată sau dacă este special și categoria "Special" este selectată
       const isInSelectedCategory = selectedCategories.includes(project.category);
       const isSpecialAndSpecialSelected = project.special && selectedCategories.includes('Special');
-      
       if (isInSelectedCategory || isSpecialAndSpecialSelected) {
         project.technologies.forEach(tech => techsInSelectedCategories.add(tech.name));
       }
     });
-    
     return allTechnologies.filter(tech => techsInSelectedCategories.has(tech.label));
   }, [selectedCategories]);
 
-  // Funcție pentru a calcula categoriile disponibile bazate pe tehnologiile selectate
   const availableCategories = useMemo(() => {
     if (selectedTechs.length === 0) {
       return allCategories;
     }
-    
     const categoriesWithSelectedTechs = new Set();
     projectsData.forEach(project => {
       if (selectedTechs.some(tech => project.technologies.some(projectTech => projectTech.name === tech))) {
@@ -55,19 +47,15 @@ const ProjectSection = () => {
         }
       }
     });
-    
     return allCategories.filter(category => categoriesWithSelectedTechs.has(category));
   }, [selectedTechs]);
 
   const handleTechToggleChange = (tech, isChecked) => {
     setSelectedTechs(prev => {
       const newSelectedTechs = isChecked ? [...prev, tech] : prev.filter(t => t !== tech);
-      
-      // Dacă nu mai sunt tehnologii selectate, resetează și categoriile
       if (newSelectedTechs.length === 0) {
         setSelectedCategories([]);
       }
-      
       return newSelectedTechs;
     });
   };
@@ -75,12 +63,9 @@ const ProjectSection = () => {
   const handleCategoryToggleChange = (category, isChecked) => {
     setSelectedCategories(prev => {
       const newSelectedCategories = isChecked ? [...prev, category] : prev.filter(c => c !== category);
-      
-      // Dacă nu mai sunt categorii selectate, resetează și tehnologiile
       if (newSelectedCategories.length === 0) {
         setSelectedTechs([]);
       }
-      
       return newSelectedCategories;
     });
   };
@@ -88,11 +73,9 @@ const ProjectSection = () => {
   const filteredProjects = projectsData.filter(project => {
     const matchesTech = selectedTechs.length === 0 || 
       selectedTechs.some(tech => project.technologies.some(projectTech => projectTech.name === tech));
-    
     const matchesCategory = selectedCategories.length === 0 || 
       selectedCategories.includes(project.category) ||
       (project.special && selectedCategories.includes('Special'));
-    
     return matchesTech && matchesCategory;
   });
 
@@ -110,7 +93,6 @@ const ProjectSection = () => {
           onToggleChange={handleTechToggleChange}
         />
       </div>
-      
       <div className="hidden lg:flex lg:flex-row gap-4 w-full">
         <TechTogglePanel
           allTechnologies={availableTechnologies}
@@ -133,4 +115,4 @@ const ProjectSection = () => {
   );
 };
 
-export default ProjectSection; 
+export default ProjectSection;

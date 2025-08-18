@@ -10,7 +10,8 @@ export const projectsData = [
       { name: "Java", color: "red" }
     ],
     category: "Web Development",
-    special: true
+    special: true,
+    date: "2024-01-15"
   },
   {
     id: 2,
@@ -22,7 +23,8 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "springboot", color: "green" }
     ],
-    category: "Mobile App"
+    category: "Mobile App",
+    date: "2024-01-20"
   },
   {
     id: 3,
@@ -35,7 +37,8 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-01-25"
   },
   {
     id: 4,
@@ -49,7 +52,8 @@ export const projectsData = [
       { name: "springboot", color: "green" }
     ],
     category: "Web Development",
-    special: true
+    special: true,
+    date: "2024-01-30"
   },
   {
     id: 5,
@@ -61,7 +65,8 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "cs", color: "purple" }
     ],
-    category: "Desktop App"
+    category: "Desktop App",
+    date: "2024-02-05"
   },
   {
     id: 6,
@@ -73,7 +78,8 @@ export const projectsData = [
       { name: "CSS", color: "purple" },
       { name: "py", color: "yellow" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-02-10"
   },
   {
     id: 7,
@@ -85,7 +91,8 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-02-15"
   },
   {
     id: 8,
@@ -97,7 +104,8 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "Java", color: "red" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-02-20"
   },
   {
     id: 9,
@@ -110,7 +118,8 @@ export const projectsData = [
       { name: "py", color: "yellow" },
       { name: "springboot", color: "green" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-02-25"
   },
   {
     id: 10,
@@ -122,7 +131,8 @@ export const projectsData = [
       { name: "Tailwind", color: "cyan" },
       { name: "sql", color: "white" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-03-01"
   },
   {
     id: 11,
@@ -135,7 +145,8 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "cs", color: "purple" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-03-05"
   },
   {
     id: 12,
@@ -147,7 +158,8 @@ export const projectsData = [
       { name: "CSS", color: "purple" },
       { name: "Java", color: "red" }
     ],
-    category: "Mobile App"
+    category: "Mobile App",
+    date: "2024-03-10"
   },
   {
     id: 13,
@@ -159,7 +171,8 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" }
     ],
     category: "Minecraft Java",
-    special: true
+    special: true,
+    date: "2024-03-15"
   },
   {
     id: 14,
@@ -170,7 +183,8 @@ export const projectsData = [
       { name: "javascript", color: "yellow" },
       { name: "json", color: "gray" }
     ],
-    category: "Minecraft Bedrock"
+    category: "Minecraft Bedrock",
+    date: "2024-03-20"
   },
   {
     id: 15,
@@ -182,7 +196,8 @@ export const projectsData = [
       { name: "discord", color: "blue" },
       { name: "json", color: "gray" }
     ],
-    category: "Discord Bot"
+    category: "Discord Bot",
+    date: "2024-03-25"
   },
   {
     id: 16,
@@ -195,7 +210,8 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-03-30"
   },
   {
     id: 17,
@@ -208,7 +224,8 @@ export const projectsData = [
       { name: "py", color: "yellow" },
       { name: "MongoDB", color: "gray" }
     ],
-    category: "Mobile App"
+    category: "Mobile App",
+    date: "2024-04-05"
   },
   {
     id: 18,
@@ -220,7 +237,8 @@ export const projectsData = [
       { name: "springboot", color: "green" },
       { name: "sql", color: "white" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-04-10"
   },
   {
     id: 19,
@@ -233,7 +251,8 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "CSS", color: "purple" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-04-15"
   },
   {
     id: 20,
@@ -246,7 +265,8 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-04-20"
   },
   {
     id: 21,
@@ -258,7 +278,8 @@ export const projectsData = [
       { name: "node", color: "green" },
       { name: "sql", color: "white" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-04-25"
   },
   {
     id: 22,
@@ -271,7 +292,8 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "CSS", color: "purple" }
     ],
-    category: "Mobile App"
+    category: "Mobile App",
+    date: "2024-04-30"
   },
   {
     id: 23,
@@ -284,7 +306,8 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development"
+    category: "Web Development",
+    date: "2024-05-05"
   },
   {
     id: 24,
@@ -298,7 +321,8 @@ export const projectsData = [
       { name: "CSS", color: "purple" }
     ],
     category: "Web Development",
-    special: true
+    special: true,
+    date: "2024-05-10"
   },
   {
     id: 25,
@@ -309,7 +333,80 @@ export const projectsData = [
       { name: "java", color: "red" },
       { name: "json", color: "gray" }
     ],
-    category: "Minecraft Java"
+    category: "Minecraft Java",
+    date: "2024-05-15"
+  },
+  {
+    id: 26,
+    title: "AI Chat Assistant",
+    description: "Asistent AI pentru chat cu integrare OpenAI și suport pentru multiple limbi",
+    image: "panorama/panorama_1.png",
+    technologies: [
+      { name: "typescript", color: "blue" },
+      { name: "node", color: "green" },
+      { name: "MongoDB", color: "gray" },
+      { name: "Tailwind", color: "cyan" }
+    ],
+    category: "Web Development",
+    date: "2024-12-01"
+  },
+  {
+    id: 27,
+    title: "Smart Home Dashboard",
+    description: "Dashboard pentru controlul dispozitivelor smart home cu IoT",
+    image: "panorama/panorama_2.png",
+    technologies: [
+      { name: "javascript", color: "yellow" },
+      { name: "node", color: "green" },
+      { name: "sql", color: "white" },
+      { name: "CSS", color: "purple" }
+    ],
+    category: "Web Development",
+    special: true,
+    date: "2024-12-05"
+  },
+  {
+    id: 28,
+    title: "Crypto Portfolio Tracker",
+    description: "Aplicație pentru urmărirea portofoliului de criptomonede în timp real",
+    image: "panorama/panorama_3.png",
+    technologies: [
+      { name: "typescript", color: "blue" },
+      { name: "springboot", color: "green" },
+      { name: "MongoDB", color: "gray" },
+      { name: "Tailwind", color: "cyan" }
+    ],
+    category: "Mobile App",
+    date: "2024-12-10"
+  },
+  {
+    id: 29,
+    title: "Virtual Reality Game",
+    description: "Joc VR pentru explorarea universului cu grafică avansată",
+    image: "panorama/panorama_4.png",
+    technologies: [
+      { name: "javascript", color: "yellow" },
+      { name: "node", color: "green" },
+      { name: "MongoDB", color: "gray" },
+      { name: "CSS", color: "purple" }
+    ],
+    category: "Desktop App",
+    date: "2024-12-15"
+  },
+  {
+    id: 30,
+    title: "Blockchain Voting System",
+    description: "Sistem de votare securizat pe blockchain pentru alegeri transparente",
+    image: "panorama/panorama_5.png",
+    technologies: [
+      { name: "typescript", color: "blue" },
+      { name: "node", color: "green" },
+      { name: "sql", color: "white" },
+      { name: "Tailwind", color: "cyan" }
+    ],
+    category: "Web Development",
+    special: true,
+    date: "2024-12-20"
   }
 ];
 

@@ -1,88 +1,125 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Container, Button } from 'mc-ui-comatv';
+import { projectsData } from '../../server/data.jsx';
+
+const CustomImageCard = ({ project }) => {
+  let techIcons = (project.technologies || []).map((tech) => ({
+    name: tech.name,
+    src: `techno/${tech.name.toLowerCase().replace('.', '').replace(' ', '')}.webp`,
+  }));
+
+  if (project.special) {
+    techIcons = [{ name: 'special', src: 'techno/special.webp' }, ...techIcons];
+  }
+
+  return (
+    <div className="relative h-5/6 w-5/6 overflow-hidden">
+      <img
+        src={project.image}
+        alt={project.title}
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+
+      <div className="absolute inset-0 z-10 p-4 flex flex-col justify-between">
+        <div className="flex flex-col items-start">
+          <h3 className="minecraft-ten text-white text-3xl">{project.title}</h3>
+          <p className="w-[30%] mt-1 text-lg">{project.description}</p>
+          {project.date && (
+            <span className="mt-2 text-green-500">
+              {new Date(project.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-2">
+          <div className="mb-2">
+            <span className="text-xs text-gray-300 uppercase tracking-wide">Platform</span>
+            <div className="mt-1">
+              <span className="inline-block bg-gray-500 text-white text-xs px-2 py-1">
+                {project.category}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              {techIcons.map((icon, index) => (
+                <img
+                  key={index}
+                  src={icon.src}
+                  alt={icon.name}
+                  title={icon.name}
+                  className="h-6 w-6 object-contain drop-shadow"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+CustomImageCard.propTypes = {
+  project: PropTypes.shape({
+    image: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    category: PropTypes.string.isRequired,
+    technologies: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        color: PropTypes.string.isRequired,
+      })
+    ),
+  }).isRequired,
+};
 
 const RightContainer = () => {
   const [activeTab, setActiveTab] = useState('newProjects');
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
 
-  // Mock data for projects
-  const projectsData = [
-    {
-      id: 1,
-      title: "Minecraft Adventure",
-      image: "/public/panorama/panorama_0.png",
-      description: "An epic adventure in a fantasy world with dragons and castles",
-      rating: 4.8,
-      price: 1200
-    },
-    {
-      id: 2,
-      title: "Dragon Quest",
-      image: "/public/panorama/panorama_1.png", 
-      description: "Explore mystical lands and battle fierce dragons",
-      rating: 4.6,
-      price: 950
-    },
-    {
-      id: 3,
-      title: "Castle Builder",
-      image: "/public/panorama/panorama_2.png",
-      description: "Build magnificent castles and fortresses",
-      rating: 4.7,
-      price: 800
-    },
-    {
-      id: 4,
-      title: "Nature Explorer",
-      image: "/public/panorama/panorama_3.png",
-      description: "Discover beautiful landscapes and hidden treasures",
-      rating: 4.5,
-      price: 650
-    }
-  ];
+  const recentProjects = useMemo(() => {
+    const now = new Date();
+    const twoMonthsAgo = new Date(now);
+    twoMonthsAgo.setMonth(now.getMonth() - 2);
 
-  const CustomImageCard = ({ project }) => (
-    <div className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-500 transition-colors max-w-md">
-      <div className="relative">
-        <img 
-          src={project.image} 
-          alt={project.title}
-          className="w-full h-48 object-cover rounded mb-3"
-        />
-      </div>
-      
-      <h3 className="text-white font-bold text-lg mb-2">{project.title}</h3>
-      <p className="text-gray-300 text-sm mb-3">{project.description}</p>
-      
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-1">
-          <span className="text-yellow-400">★</span>
-          <span className="text-white text-sm">{project.rating}</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <span className="text-yellow-400">🪙</span>
-          <span className="text-white text-sm">{project.price}</span>
-        </div>
-      </div>
-    </div>
-  );
+    const sorted = [...projectsData]
+      .filter(p => p.date)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const lastTwoMonths = sorted.filter(p => new Date(p.date) >= twoMonthsAgo);
+    if (lastTwoMonths.length > 0) return lastTwoMonths;
+
+    return sorted.slice(0, 5);
+  }, []);
+
+  const bigProjects = useMemo(() => {
+    return projectsData.filter(p => p.special);
+  }, []);
+
+  const displayedProjects = activeTab === 'newProjects' ? recentProjects : bigProjects;
+
+  useEffect(() => {
+    setCurrentProjectIndex(0);
+  }, [activeTab]);
 
   const handlePrevious = () => {
-    setCurrentProjectIndex((prev) => 
-      prev === 0 ? projectsData.length - 1 : prev - 1
-    );
+    if (displayedProjects.length === 0) return;
+    setCurrentProjectIndex((prev) => (prev === 0 ? displayedProjects.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentProjectIndex((prev) => 
-      prev === projectsData.length - 1 ? 0 : prev + 1
-    );
+    if (displayedProjects.length === 0) return;
+    setCurrentProjectIndex((prev) => (prev === displayedProjects.length - 1 ? 0 : prev + 1));
   };
 
   return (
-    <Container variant="transparent" className="h-[75vh] w-full">
+    <div className="h-[75vh] w-full">
       <div className="flex flex-col">
-        {/* Tab Buttons */}
         <div className="flex space-x-4">
           <Button 
             label="New Projects" 
@@ -101,22 +138,20 @@ const RightContainer = () => {
             onClick={() => setActiveTab('bigProjects')} 
           />
         </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <Container variant="transparent" className="flex-1 overflow-y-auto">
           {activeTab === 'newProjects' && (
             <div className="flex items-center justify-between h-[70vh] w-full">
-              {/* Previous Button */}
               <Button 
                 label="‹"
-                width={60}
+                width={60}       
+                height={'90%'}
                 onClick={handlePrevious}
               />
-              
-              {/* Center ImageCard */}
-              <CustomImageCard project={projectsData[currentProjectIndex]} />
-              
-              {/* Next Button */}
+              {displayedProjects.length > 0 ? (
+                <CustomImageCard project={displayedProjects[currentProjectIndex]} />
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-gray-400">No projects</div>
+              )}
               <Button 
                 label="›"
                 width={60}                
@@ -128,18 +163,17 @@ const RightContainer = () => {
           
           {activeTab === 'bigProjects' && (
             <div className="flex items-center justify-between h-[70vh] w-full">
-              {/* Previous Button */}
               <Button 
                 label="‹"
                 width={60}
                 height={'90%'}
                 onClick={handlePrevious}
               />
-              
-              {/* Center ImageCard */}
-              <CustomImageCard project={projectsData[currentProjectIndex]} />
-              
-              {/* Next Button */}
+              {displayedProjects.length > 0 ? (
+                <CustomImageCard project={displayedProjects[currentProjectIndex]} />
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-gray-400">No big projects</div>
+              )}
               <Button 
                 label="›"
                 width={60}
@@ -148,9 +182,9 @@ const RightContainer = () => {
               />
             </div>
           )}
-        </div>
+        </Container>
       </div>
-    </Container>
+    </div>
   );
 };
 
