@@ -25,7 +25,6 @@ const CollaboratorsSection = () => {
           style={{ gap: 0, padding: 0, margin: 0 }}
         >
           {collaborators.map((c) => {
-            const desc = `${c.description}${c.social?.discord ? `\nDiscord: ${c.social.discord}` : ''}`;
             const social = c.social || {};
             const iconMap = {
               github: 'techno/github.webp',
