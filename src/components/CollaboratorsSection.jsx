@@ -1,7 +1,9 @@
 import { Scrollbar, ImageCard,Container } from 'mc-ui-comatv';
 import { collaborators } from '../server/data';
+import { useNavigate } from 'react-router-dom';
 
 const CollaboratorsSection = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen flex flex-col">
       <div className="w-full flex justify-center mt-40">
@@ -43,7 +45,7 @@ const CollaboratorsSection = () => {
                 label={c.title}
                 description={c.description}
                 iconImages={iconImages}
-                onClick={() => alert(`Colaborare: ${c.title}`)}
+                onClick={() => navigate(`/collaborators/${c.id}`)}
               />
             );
           })}

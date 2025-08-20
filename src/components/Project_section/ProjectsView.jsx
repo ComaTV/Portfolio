@@ -1,6 +1,8 @@
 import { Scrollbar, ImageCard,Container } from 'mc-ui-comatv';
+import { useNavigate } from 'react-router-dom';
 
 const ProjectsView = ({ projects }) => {
+  const navigate = useNavigate();
   return (
     <Container
       variant="transparent"
@@ -31,7 +33,7 @@ const ProjectsView = ({ projects }) => {
               label={project.title}
               description={project.description}
               iconImages={iconImages}
-              onClick={() => alert(`Ai selectat proiectul: ${project.title}`)}
+              onClick={() => navigate(`/projects/${project.id}`)}
             />
           );
         })}

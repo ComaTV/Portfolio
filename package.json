@@ -12,6 +12,7 @@
     "mc-ui-comatv": "^1.1.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-router-dom": "^6.30.1",
     "react-scripts": "5.0.1",
     "skinview3d": "^3.4.1",
     "three": "^0.178.0",

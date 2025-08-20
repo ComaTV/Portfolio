@@ -2,8 +2,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Container, Button } from 'mc-ui-comatv';
 import { projectsData } from '../../server/data.jsx';
+import { useNavigate } from 'react-router-dom';
 
 const CustomImageCard = ({ project }) => {
+  const navigate = useNavigate();
   let techIcons = (project.technologies || []).map((tech) => ({
     name: tech.name,
     src: `techno/${tech.name.toLowerCase().replace('.', '').replace(' ', '')}.webp`,
@@ -14,7 +16,10 @@ const CustomImageCard = ({ project }) => {
   }
 
   return (
-    <div className="relative h-5/6 w-5/6 overflow-hidden">
+    <div
+      className="relative h-5/6 w-5/6 overflow-hidden cursor-pointer"
+      onClick={() => navigate(`/projects/${project.id}`)}
+    >
       <img
         src={project.image}
         alt={project.title}
