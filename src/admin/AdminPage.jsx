@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Button, Container, Input, Checkbox, Dropdown } from 'mc-ui-comatv';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { Button, Container, Input, Toggle, Dropdown } from 'mc-ui-comatv';
 import { projectsData as initialProjects, collaborators as initialCollaborators, profileData as initialProfile } from '../server/data';
 
 const SectionButton = ({ active, onClick, children }) => (
@@ -42,6 +42,42 @@ const Field = ({ label, children }) => (
 
 // (Removed) CategoryColorsForm – colors are now stored per project under category
 
+// Utility: convert File to data URL
+async function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Image picker: allow path or upload with preview
+const ImagePicker = ({ label = 'Image', value, onChange }) => {
+  const handleFile = async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const url = await fileToDataUrl(f);
+    onChange(url);
+  };
+  return (
+    <Field label={label}>
+      <div className="space-y-2">
+        <Input placeholder="image path or URL" defaultValue={value} onChange={(val) => onChange(val)} />
+        <div className="flex items-center gap-2">
+          <input type="file" accept="image/*" onChange={handleFile} />
+          <div className="text-xs text-gray-600">Poți încărca o imagine (va fi salvată ca Data URL în date)</div>
+        </div>
+        {value ? (
+          <div className="border rounded p-2 bg-white/70">
+            <img src={value} alt="preview" className="max-h-40 object-contain" />
+          </div>
+        ) : null}
+      </div>
+    </Field>
+  );
+};
+
 // Profile form editor
 const ProfileForm = ({ value, onChange }) => {
   const update = (patch) => onChange({ ...value, ...patch });
@@ -53,7 +89,10 @@ const ProfileForm = ({ value, onChange }) => {
           <Input placeholder="Name" defaultValue={value.name} onChange={(val) => update({ name: val })} />
         </Field>
         <Field label="Status">
-          <Checkbox label="Active" checked={!!value.status} onChange={(checked) => update({ status: checked })} />
+          <div className="flex items-center gap-2">
+            <Toggle checked={!!value.status} onChange={(checked) => update({ status: checked })} />
+            <span>Active</span>
+          </div>
         </Field>
         <Field label="Avatar">
           <Input placeholder="avatar path" defaultValue={value.avatar} onChange={(val) => update({ avatar: val })} />
@@ -83,13 +122,36 @@ const ProfileForm = ({ value, onChange }) => {
             </Field>
           </div>
         </div>
+        <div className="md:col-span-2">
+          <PairListEditor
+            label="Technologies (name + color)"
+            items={value.technologies || []}
+            onChange={(val) => update({ technologies: val })}
+            fields={[
+              { key: 'name', placeholder: 'e.g. javascript, node, MongoDB' },
+              { key: 'color', placeholder: 'e.g. yellow, green, gray' },
+            ]}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <PairListEditor
+            label="Categories (name + color)"
+            items={value.categories || []}
+            onChange={(val) => update({ categories: val })}
+            fields={[
+              { key: 'name', placeholder: 'e.g. Web Development, Mobile App' },
+              { key: 'color', placeholder: 'e.g. cyan, white, blue' },
+            ]}
+          />
+        </div>
       </div>
     </Container>
   );
 };
 
 // Minimal array-of-strings editor (for media)
-const StringListEditor = ({ label, values, onChange, placeholder }) => {
+const StringListEditor = ({ label, values, onChange, placeholder, enableUpload }) => {
+  const fileInputRef = useRef(null);
   const add = () => onChange([...(values || []), '']);
   const update = (i, val) => {
     const next = [...(values || [])];
@@ -101,16 +163,43 @@ const StringListEditor = ({ label, values, onChange, placeholder }) => {
     next.splice(i, 1);
     onChange(next);
   };
+  const addFiles = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const urls = await Promise.all(files.map(fileToDataUrl));
+    onChange([...(values || []), ...urls]);
+    // reset input so same files can be selected again if needed
+    e.target.value = '';
+  };
   return (
     <Field label={label}>
       <div className="space-y-2">
-        {(values || []).map((v, i) => (
-          <div key={i} className="flex gap-2">
-            <div className="flex-1"><Input placeholder={placeholder} defaultValue={v} onChange={(val) => update(i, val)} /></div>
-            <Button label="Remove" variant="red" onClick={() => remove(i)} />
+        {enableUpload && (
+          <div className="flex items-center gap-3">
+            <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={addFiles} className="hidden" />
+            <Button label="Upload images" variant="green" onClick={() => fileInputRef.current?.click()} />
           </div>
-        ))}
-        <Button label="Add" variant="green" onClick={add} />
+        )}
+        <div className="max-h-96 overflow-y-auto rounded border border-gray-200 bg-white/70 p-2">
+          {!(values || []).length ? (
+            <div className="text-sm text-gray-500">Nicio imagine adăugată încă.</div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {(values || []).map((v, i) => (
+                <div key={i} className="relative group">
+                  {v ? (
+                    <img src={v} alt={`media-${i}`} className="w-full h-40 md:h-48 object-cover rounded border" />
+                  ) : (
+                    <div className="w-full h-40 md:h-48 rounded border bg-gray-100" />
+                  )}
+                  <div className="absolute top-2 right-2 opacity-90 group-hover:opacity-100">
+                    <Button label="Remove" variant="red" onClick={() => remove(i)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </Field>
   );
@@ -218,14 +307,17 @@ const ProjectsForm = ({ projects, onChange, collaborators = [] }) => {
             }
           }} placeholder="e.g. cyan/blue/green..." /></Field>
           <Field label="Date"><Input defaultValue={current.date} onChange={(val) => updateCurrent({ date: val })} placeholder="YYYY-MM-DD" /></Field>
-          <Field label="Image"><Input defaultValue={current.image} onChange={(val) => updateCurrent({ image: val })} placeholder="image path" /></Field>
+          <ImagePicker label="Image" value={current.image} onChange={(val) => updateCurrent({ image: val })} />
           <div className="md:col-span-2">
             <Field label="Description">
               <Input placeholder={current.description} onChange={(e) => updateCurrent({ description: e.target.value })} />
             </Field>
           </div>
           <div className="md:col-span-2">
-            <Checkbox label="Special" checked={!!current.special} onChange={(checked) => updateCurrent({ special: checked })} />
+            <div className="flex items-center gap-2">
+              <Toggle checked={!!current.special} onChange={(checked) => updateCurrent({ special: checked })} />
+              <span>Special</span>
+            </div>
           </div>
           <Field label="Collaboration">
             {(() => {
@@ -245,7 +337,7 @@ const ProjectsForm = ({ projects, onChange, collaborators = [] }) => {
             })()}
           </Field>
           <div className="md:col-span-2">
-            <StringListEditor label="Media (list)" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" />
+            <StringListEditor label="Media (list)" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" enableUpload={true} />
           </div>
           <div className="md:col-span-2">
             <PairListEditor
@@ -372,7 +464,6 @@ export default function AdminPage() {
     } catch {}
   }, []);
 
-  // Save to localStorage automatically
   useEffect(() => {
     const payload = { projects, collaborators, profile };
     try { localStorage.setItem(StorageKey, JSON.stringify(payload)); } catch {}
@@ -403,7 +494,7 @@ export default function AdminPage() {
   return (
     <div className="h-full w-full text-gray-900">
       <Container>
-          <h1 className="text-xl font-bold">Admin Editor</h1>
+          <h1 className="minecraft-ten text-4xl pb-6">Admin Editor</h1>
           <div className="flex items-center gap-2">
             <Button label="Export data.jsx" variant="green" onClick={downloadDataJs} />
             <Button label="Reset to repo" variant="purple" onClick={resetToRepo} />
