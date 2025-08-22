@@ -12,7 +12,7 @@ const allTechnologies = Array.from(
 }));
 
 const allCategories = ['Special', ...Array.from(
-  new Set(projectsData.map(project => project.category))
+  new Set(projectsData.map(project => (typeof project.category === 'object' ? project.category.name : project.category)))
 )];
 
 const ProjectSection = () => {
@@ -25,12 +25,14 @@ const ProjectSection = () => {
     }
     const techsInSelectedCategories = new Set();
     projectsData.forEach(project => {
-      const isInSelectedCategory = selectedCategories.includes(project.category);
+      const catName = typeof project.category === 'object' ? project.category.name : project.category;
+      const isInSelectedCategory = selectedCategories.includes(catName);
       const isSpecialAndSpecialSelected = project.special && selectedCategories.includes('Special');
       if (isInSelectedCategory || isSpecialAndSpecialSelected) {
         project.technologies.forEach(tech => techsInSelectedCategories.add(tech.name));
       }
     });
+
     return allTechnologies.filter(tech => techsInSelectedCategories.has(tech.label));
   }, [selectedCategories]);
 
@@ -41,12 +43,14 @@ const ProjectSection = () => {
     const categoriesWithSelectedTechs = new Set();
     projectsData.forEach(project => {
       if (selectedTechs.some(tech => project.technologies.some(projectTech => projectTech.name === tech))) {
-        categoriesWithSelectedTechs.add(project.category);
+        const catName = typeof project.category === 'object' ? project.category.name : project.category;
+        categoriesWithSelectedTechs.add(catName);
         if (project.special) {
           categoriesWithSelectedTechs.add('Special');
         }
       }
     });
+
     return allCategories.filter(category => categoriesWithSelectedTechs.has(category));
   }, [selectedTechs]);
 
@@ -73,8 +77,9 @@ const ProjectSection = () => {
   const filteredProjects = projectsData.filter(project => {
     const matchesTech = selectedTechs.length === 0 || 
       selectedTechs.some(tech => project.technologies.some(projectTech => projectTech.name === tech));
+    const catName = typeof project.category === 'object' ? project.category.name : project.category;
     const matchesCategory = selectedCategories.length === 0 || 
-      selectedCategories.includes(project.category) ||
+      selectedCategories.includes(catName) ||
       (project.special && selectedCategories.includes('Special'));
     return matchesTech && matchesCategory;
   });

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Container } from 'mc-ui-comatv';
-import { projectsData, profileData, categoryColors } from '../../server/data.jsx';
+import { projectsData, profileData } from '../../server/data.jsx';
 import * as skinview3d from 'skinview3d';
 
 const ProfileInfo = () => {
@@ -106,9 +106,26 @@ const ProfileInfo = () => {
               <h3 className="text-sm text-white mb-2">Platforms I develop on:</h3>
               <div className="flex flex-wrap gap-2">
                 {(() => {
-                  const uniqueCategories = [...new Set(projectsData.map(project => project.category))];
-                  return uniqueCategories.map((cat) => {
-                    const color = categoryColors[cat] || 'gray';
+                  // Default mapping for backward compatibility when project.category is a string
+                  const defaultCategoryColors = {
+                    'Web Development': 'cyan',
+                    'Mobile App': 'white',
+                    'Desktop App': 'blue',
+                    'Minecraft Java': 'orange',
+                    'Minecraft Bedrock': 'green',
+                    'Discord Bot': 'purple',
+                  };
+
+                  // Normalize categories to { name, color }
+                  const normalized = projectsData.map((project) => {
+                    const cat = project.category;
+                    if (cat && typeof cat === 'object') return { name: cat.name, color: cat.color };
+                    const name = cat || 'Unknown';
+                    const color = defaultCategoryColors[name] || 'gray';
+                    return { name, color };
+                  });
+                  const uniqueByName = Array.from(new Map(normalized.map(c => [c.name, c])).values());
+                  return uniqueByName.map(({ name, color }) => {
                     const colorClass = {
                       cyan: 'text-cyan-400',
                       white: 'text-gray-200',
@@ -120,8 +137,8 @@ const ProfileInfo = () => {
                       gray: 'text-gray-400',
                     }[color] || 'text-gray-300';
                     return (
-                      <span key={cat} className={`flex items-center gap-1 rounded ${colorClass}`}>
-                        <span className="text-xs font-medium">{cat}</span>
+                      <span key={name} className={`flex items-center gap-1 rounded ${colorClass}`}>
+                        <span className="text-xs font-medium">{name}</span>
                       </span>
                     );
                   });

@@ -14,7 +14,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "Java", color: "red" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     special: true,
     date: "2024-01-15",
     linksList: [
@@ -39,7 +39,7 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "springboot", color: "green" }
     ],
-    category: "Mobile App",
+    category: { name: "Mobile App", color: "white" },
     date: "2024-01-20",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-2' },
@@ -63,7 +63,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-01-25",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-3' },
@@ -87,7 +87,7 @@ export const projectsData = [
       { name: "Java", color: "red" },
       { name: "springboot", color: "green" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     special: true,
     date: "2024-01-30",
     linksList: [
@@ -112,7 +112,7 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "cs", color: "purple" }
     ],
-    category: "Desktop App",
+    category: { name: "Desktop App", color: "blue" },
     date: "2024-02-05",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-5' },
@@ -135,7 +135,7 @@ export const projectsData = [
       { name: "CSS", color: "purple" },
       { name: "py", color: "yellow" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-02-10",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-6' },
@@ -158,7 +158,7 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-02-15",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-7' },
@@ -181,7 +181,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "Java", color: "red" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-02-20",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-8' },
@@ -205,7 +205,7 @@ export const projectsData = [
       { name: "py", color: "yellow" },
       { name: "springboot", color: "green" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-02-25",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-9' },
@@ -228,7 +228,7 @@ export const projectsData = [
       { name: "Tailwind", color: "cyan" },
       { name: "sql", color: "white" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-03-01",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-10' },
@@ -252,7 +252,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "cs", color: "purple" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-03-05",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-11' },
@@ -275,7 +275,7 @@ export const projectsData = [
       { name: "CSS", color: "purple" },
       { name: "Java", color: "red" }
     ],
-    category: "Mobile App",
+    category: { name: "Mobile App", color: "white" },
     date: "2024-03-10",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-12' },
@@ -297,7 +297,7 @@ export const projectsData = [
       { name: "Java", color: "red" },
       { name: "MongoDB", color: "gray" }
     ],
-    category: "Minecraft Java",
+    category: { name: "Minecraft Java", color: "orange" },
     special: true,
     date: "2024-03-15",
     linksList: [
@@ -321,7 +321,7 @@ export const projectsData = [
       { name: "javascript", color: "yellow" },
       { name: "json", color: "gray" }
     ],
-    category: "Minecraft Bedrock",
+    category: { name: "Minecraft Bedrock", color: "green" },
     date: "2024-03-20",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-14' },
@@ -344,7 +344,7 @@ export const projectsData = [
       { name: "discord", color: "blue" },
       { name: "json", color: "gray" }
     ],
-    category: "Discord Bot",
+    category: { name: "Discord Bot", color: "purple" },
     date: "2024-03-25",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-15' },
@@ -368,7 +368,7 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-03-30",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-16' },
@@ -392,7 +392,7 @@ export const projectsData = [
       { name: "py", color: "yellow" },
       { name: "MongoDB", color: "gray" }
     ],
-    category: "Mobile App",
+    category: { name: "Mobile App", color: "white" },
     date: "2024-04-05",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-17' },
@@ -415,7 +415,7 @@ export const projectsData = [
       { name: "springboot", color: "green" },
       { name: "sql", color: "white" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-04-10",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-18' },
@@ -439,7 +439,7 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "CSS", color: "purple" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-04-15",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-19' },
@@ -463,7 +463,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-04-20",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-20' },
@@ -486,7 +486,7 @@ export const projectsData = [
       { name: "node", color: "green" },
       { name: "sql", color: "white" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-04-25",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-21' },
@@ -510,7 +510,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "CSS", color: "purple" }
     ],
-    category: "Mobile App",
+    category: { name: "Mobile App", color: "white" },
     date: "2024-04-30",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-22' },
@@ -534,7 +534,7 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-05-05",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-23' },
@@ -558,7 +558,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "CSS", color: "purple" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     special: true,
     date: "2024-05-10",
     linksList: [
@@ -582,7 +582,7 @@ export const projectsData = [
       { name: "java", color: "red" },
       { name: "json", color: "gray" }
     ],
-    category: "Minecraft Java",
+    category: { name: "Minecraft Java", color: "orange" },
     date: "2024-05-15",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-25' },
@@ -606,7 +606,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     date: "2024-12-01",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-26' },
@@ -630,7 +630,7 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "CSS", color: "purple" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     special: true,
     date: "2024-12-05",
     linksList: [
@@ -656,7 +656,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Mobile App",
+    category: { name: "Mobile App", color: "white" },
     date: "2024-12-10",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-28' },
@@ -680,7 +680,7 @@ export const projectsData = [
       { name: "MongoDB", color: "gray" },
       { name: "CSS", color: "purple" }
     ],
-    category: "Desktop App",
+    category: { name: "Desktop App", color: "blue" },
     date: "2024-12-15",
     linksList: [
       { name: 'GitHub', url: 'https://github.com/ComaTV4776/project-29' },
@@ -704,7 +704,7 @@ export const projectsData = [
       { name: "sql", color: "white" },
       { name: "Tailwind", color: "cyan" }
     ],
-    category: "Web Development",
+    category: { name: "Web Development", color: "cyan" },
     special: true,
     date: "2024-12-20",
     linksList: [
@@ -781,12 +781,3 @@ export const profileData = {
   }
 };
 
-export const categoryColors = {
-  'Web Development': 'cyan',
-  'Mobile App': 'white',
-  'Desktop App': 'blue',
-  'Minecraft Java': 'orange',
-  'Minecraft Bedrock': 'green',
-  'Discord Bot': 'purple',
-  'Special': 'yellow',
-};

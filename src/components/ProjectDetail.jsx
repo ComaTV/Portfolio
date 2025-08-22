@@ -33,22 +33,8 @@ const ProjectDetail = () => {
   // Build media list: use provided media, otherwise derive a few from the base image so we have multiple slides
   const media = (() => {
     if (Array.isArray(project.media) && project.media.length > 0) return project.media;
-    const base = project.image;
-    if (!base) return [];
-    const list = [base];
-    const match = base.match(/panorama\/(?:panorama_)?(\d+)\.(png|webp|jpg|jpeg)$/i);
-    const maxIdx = 5; // we have panorama_0..5 in public
-    if (match) {
-      const start = Number(match[1]);
-      const ext = match[2];
-      const next1 = (start + 1) % (maxIdx + 1);
-      const next2 = (start + 2) % (maxIdx + 1);
-      list.push(`panorama/panorama_${next1}.${ext}`);
-      list.push(`panorama/panorama_${next2}.${ext}`);
-    } else {
-      list.push('panorama/panorama_1.png', 'panorama/panorama_2.png');
-    }
-    return list;
+    if (typeof project.image === 'string' && project.image.length > 0) return [project.image];
+    return [];
   })();
   const youtubeLink = (project.linksList || []).find(l => typeof l?.url === 'string' && l.name?.toLowerCase() === 'youtube')?.url;
   const hasYouTube = Boolean(youtubeLink);
@@ -103,9 +89,11 @@ const ProjectDetail = () => {
                         />
                         <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="h-16 w-16 rounded-md bg-white/80 group-hover:bg-white shadow-lg flex items-center justify-center">
-                            <div className="ml-1 border-l-[18px] border-l-black border-y-[12px] border-y-transparent" />
-                          </div>
+                          <img
+                            src={asPublic('text/play.webp')}
+                            alt="Play"
+                            className="h-20 w-20 object-contain [image-rendering:crisp-edges]"
+                          />
                         </div>
                       </button>
                     ) : (
@@ -131,7 +119,7 @@ const ProjectDetail = () => {
             </div>
               <Container variant="dark">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="inline-block bg-gray-600 text-white text-xs px-2 py-1">{project.category}</span>
+                  <span className="inline-block bg-gray-600 text-white text-xs px-2 py-1">{typeof project.category === 'object' ? (project.category?.name || '') : (project.category || '')}</span>
                   {project.special && (
                     <img src={asPublic('techno/special.webp')} alt="special" title="special" className="h-6 w-6 object-contain drop-shadow" />
                   )}

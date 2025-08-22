@@ -44,7 +44,7 @@ const CustomImageCard = ({ project }) => {
             <span className="text-xs text-gray-300 uppercase tracking-wide">Platform</span>
             <div className="mt-1">
               <span className="inline-block bg-gray-500 text-white text-xs px-2 py-1">
-                {project.category}
+                {typeof project.category === 'object' ? (project.category?.name || '') : (project.category || '')}
               </span>
             </div>
           </div>
@@ -73,7 +73,10 @@ CustomImageCard.propTypes = {
     image: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
-    category: PropTypes.string.isRequired,
+    category: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.shape({ name: PropTypes.string, color: PropTypes.string })
+    ]),
     technologies: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,

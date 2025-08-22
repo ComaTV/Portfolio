@@ -1,5 +1,5 @@
 import { Container, Scrollbar, Toggle, Checkbox } from 'mc-ui-comatv';
-import { categoryColors } from '../../server/data.jsx';
+import { projectsData } from '../../server/data';
 
 const CategoryTogglePanel = ({ allCategories, selectedCategories, onToggleChange }) => {
   const categoryClassMap = {
@@ -11,6 +11,25 @@ const CategoryTogglePanel = ({ allCategories, selectedCategories, onToggleChange
     purple: 'text-purple-400',
     yellow: 'text-yellow-300',
   };
+  // Default color mapping by category name (fallback)
+  const defaultCategoryColors = {
+    'Web Development': 'cyan',
+    'Mobile App': 'white',
+    'Desktop App': 'blue',
+    'Minecraft Java': 'orange',
+    'Minecraft Bedrock': 'green',
+    'Discord Bot': 'purple',
+  };
+
+  // Build color map from embedded project categories when available
+  const embeddedCategoryColors = projectsData.reduce((acc, p) => {
+    const cat = p.category;
+    if (cat && typeof cat === 'object' && cat.name) {
+      if (!acc[cat.name] && cat.color) acc[cat.name] = cat.color;
+    }
+    return acc;
+  }, {});
+
   return (
     <div className="w-full lg:w-1/4 xl:w-1/5 min-w-[280px] max-w-full lg:max-w-none">
       <Container>
@@ -36,7 +55,7 @@ const CategoryTogglePanel = ({ allCategories, selectedCategories, onToggleChange
                 <span className={`text-xs sm:text-sm flex-1 min-w-0 truncate ${
                   category === 'Special'
                     ? 'text-yellow-300 minecraft-font'
-                    : categoryClassMap[categoryColors[category]] || 'text-green-400'
+                    : categoryClassMap[embeddedCategoryColors[category] || defaultCategoryColors[category]] || 'text-green-400'
                 }`}>
                   {category}
                 </span>

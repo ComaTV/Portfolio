@@ -7,6 +7,7 @@ import CollaboratorsSection from './components/CollaboratorsSection';
 import { Routes, Route } from 'react-router-dom';
 import ProjectDetail from './components/ProjectDetail';
 import CollaboratorDetail from './components/CollaboratorDetail';
+import AdminPage from './admin/AdminPage';
 
 function App() {
 
@@ -38,6 +39,14 @@ function App() {
             element={
               <Scrollbar height="100%" width="100%" variant="vertical" style={{ padding: 0, margin: 0, gap: 0, transform: 'translateX(0)' }}>
                 <CollaboratorDetail />
+              </Scrollbar>
+            }
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <Scrollbar height="100%" width="100%" variant="vertical" style={{ padding: 0, margin: 0, gap: 0, transform: 'translateX(0)' }}>
+                <AdminPage />
               </Scrollbar>
             }
           />
