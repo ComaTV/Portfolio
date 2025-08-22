@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Button, Container, Input, Checkbox } from 'mc-ui-comatv';
+import { Button, Container, Input, Checkbox, Dropdown } from 'mc-ui-comatv';
 import { projectsData as initialProjects, collaborators as initialCollaborators, profileData as initialProfile } from '../server/data';
 
 const SectionButton = ({ active, onClick, children }) => (
@@ -31,55 +31,6 @@ function generateDataJs(projects, collaborators, profile) {
   const pr = stringifyJsExport('profileData', profile);
   return `${p}\n\n${c}\n\n${pr}`;
 }
-
-const JsonEditor = ({ label, value, onChange, example }) => {
-  const [text, setText] = useState(() => JSON.stringify(value, null, 2));
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    setText(JSON.stringify(value, null, 2));
-  }, [value]);
-
-  const handleApply = () => {
-    try {
-      const parsed = JSON.parse(text);
-      onChange(parsed);
-      setError(null);
-    } catch (e) {
-      setError(e.message);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{label}</h3>
-        <div className="flex items-center gap-2">
-          <Button label="Apply JSON" variant="green" onClick={handleApply} />
-        </div>
-      </div>
-      <Container>
-        <textarea
-          className="w-full h-80 p-3 font-mono text-sm rounded border border-gray-300 bg-white/90 text-gray-900"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          spellCheck={false}
-        />
-      </Container>
-      {error && (
-        <div className="text-red-600 text-sm">JSON error: {error}</div>
-      )}
-      {example && (
-        <details className="text-sm text-gray-700">
-          <summary className="cursor-pointer select-none">See example format</summary>
-          <pre className="mt-2 p-2 rounded bg-gray-100 overflow-auto">
-            {JSON.stringify(example, null, 2)}
-          </pre>
-        </details>
-      )}
-    </div>
-  );
-};
 
 // Simple labeled field wrapper for Input
 const Field = ({ label, children }) => (
@@ -115,7 +66,7 @@ const ProfileForm = ({ value, onChange }) => {
         </Field>
         <div className="md:col-span-2">
           <Field label="Description">
-            <textarea className="w-full h-28 p-3 font-sans text-sm rounded border border-gray-300 bg-white/90 text-gray-900" defaultValue={value.description} onChange={(e) => update({ description: e.target.value })} />
+            <Input placeholder={value.description} onChange={(e) => update({ description: e.target.value })} />
           </Field>
         </div>
         <div className="md:col-span-2">
@@ -200,7 +151,7 @@ const PairListEditor = ({ label, items = [], onChange, fields }) => {
 };
 
 // Basic Project editor (core fields)
-const ProjectsForm = ({ projects, onChange }) => {
+const ProjectsForm = ({ projects, onChange, collaborators = [] }) => {
   const [index, setIndex] = useState(0);
   const current = projects[index] || {};
   const updateCurrent = (patch) => {
@@ -224,12 +175,23 @@ const ProjectsForm = ({ projects, onChange }) => {
   return (
     <Container variant="form">
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        <div className="text-sm">Selected:</div>
-        <div className="flex gap-2 overflow-x-auto">
-          {projects.map((p, i) => (
-            <Button key={p.id} label={`#${p.id}`} variant={i === index ? 'green' : 'default'} onClick={() => setIndex(i)} />
-          ))}
-        </div>
+        <div className="text-sm">Selected project:</div>
+        {(() => {
+          const options = projects.map((p) => `#${p.id} · ${p.title || 'Untitled'}`);
+          const selected = options[index] || 'Select project';
+          return (
+            <Dropdown
+              header="Select project"
+              label={selected}
+              options={options}
+              dark={true}
+              onSelect={(opt) => {
+                const i = options.indexOf(opt);
+                if (i >= 0) setIndex(i);
+              }}
+            />
+          );
+        })()}
         <div className="ml-auto flex gap-2">
           <Button label="Add" variant="green" onClick={addProject} />
           <Button label="Remove" variant="red" onClick={removeProject} />
@@ -258,12 +220,30 @@ const ProjectsForm = ({ projects, onChange }) => {
           <Field label="Date"><Input defaultValue={current.date} onChange={(val) => updateCurrent({ date: val })} placeholder="YYYY-MM-DD" /></Field>
           <Field label="Image"><Input defaultValue={current.image} onChange={(val) => updateCurrent({ image: val })} placeholder="image path" /></Field>
           <div className="md:col-span-2">
-            <Field label="Description"><textarea className="w-full h-28 p-3 font-sans text-sm rounded border border-gray-300 bg-white/90 text-gray-900" defaultValue={current.description} onChange={(e) => updateCurrent({ description: e.target.value })} /></Field>
+            <Field label="Description">
+              <Input placeholder={current.description} onChange={(e) => updateCurrent({ description: e.target.value })} />
+            </Field>
           </div>
           <div className="md:col-span-2">
             <Checkbox label="Special" checked={!!current.special} onChange={(checked) => updateCurrent({ special: checked })} />
           </div>
-          <Field label="Collaboration"><Input defaultValue={current.collaboration || ''} onChange={(val) => updateCurrent({ collaboration: val })} placeholder="Collaborator name (optional)" /></Field>
+          <Field label="Collaboration">
+            {(() => {
+              const options = ['None', ...collaborators.map((c) => c.title)];
+              const label = current.collaboration && options.includes(current.collaboration)
+                ? current.collaboration
+                : (current.collaboration ? current.collaboration : 'None');
+              return (
+                <Dropdown
+                  header="Select collaborator"
+                  label={label}
+                  options={options}
+                  dark={true}
+                  onSelect={(opt) => updateCurrent({ collaboration: opt === 'None' ? '' : opt })}
+                />
+              );
+            })()}
+          </Field>
           <div className="md:col-span-2">
             <StringListEditor label="Media (list)" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" />
           </div>
@@ -321,12 +301,23 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
   return (
     <Container variant="form">
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        <div className="text-sm">Selected:</div>
-        <div className="flex gap-2 overflow-x-auto">
-          {collaborators.map((c, i) => (
-            <Button key={c.id} label={`#${c.id}`} variant={i === index ? 'green' : 'default'} onClick={() => setIndex(i)} />
-          ))}
-        </div>
+        <div className="text-sm">Selected collaborator:</div>
+        {(() => {
+          const options = collaborators.map((c) => `#${c.id} · ${c.title || 'Untitled'}`);
+          const selected = options[index] || 'Select collaborator';
+          return (
+            <Dropdown
+              header="Select collaborator"
+              label={selected}
+              options={options}
+              dark={true}
+              onSelect={(opt) => {
+                const i = options.indexOf(opt);
+                if (i >= 0) setIndex(i);
+              }}
+            />
+          );
+        })()}
         <div className="ml-auto flex gap-2">
           <Button label="Add" variant="green" onClick={addItem} />
           <Button label="Remove" variant="red" onClick={removeItem} />
@@ -338,7 +329,9 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
           <Field label="Date"><Input defaultValue={current.date} onChange={(val) => updateCurrent({ date: val })} placeholder="YYYY-MM-DD" /></Field>
           <Field label="Image"><Input defaultValue={current.image} onChange={(val) => updateCurrent({ image: val })} placeholder="image path" /></Field>
           <div className="md:col-span-2">
-            <Field label="Description"><textarea className="w-full h-28 p-3 font-sans text-sm rounded border border-gray-300 bg-white/90 text-gray-900" defaultValue={current.description} onChange={(e) => updateCurrent({ description: e.target.value })} /></Field>
+            <Field label="Description">
+              <Input placeholder={current.description} onChange={(e) => updateCurrent({ description: e.target.value })} />
+            </Field>
           </div>
           <div className="md:col-span-2">
             <StringListEditor label="Media (list)" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" />
@@ -409,29 +402,48 @@ export default function AdminPage() {
 
   return (
     <div className="h-full w-full text-gray-900">
-      <div className="backdrop-blur-sm bg-white/70 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <Container>
           <h1 className="text-xl font-bold">Admin Editor</h1>
           <div className="flex items-center gap-2">
             <Button label="Export data.jsx" variant="green" onClick={downloadDataJs} />
             <Button label="Reset to repo" variant="purple" onClick={resetToRepo} />
           </div>
-        </div>
-      </div>
+      </Container>
 
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="grid grid-cols-12 gap-4">
           <aside className="col-span-12 md:col-span-3">
-            <div className="flex md:flex-col gap-2">
-              <SectionButton active={section === 'projects'} onClick={() => setSection('projects')}>Projects</SectionButton>
-              <SectionButton active={section === 'collaborators'} onClick={() => setSection('collaborators')}>Collaborators</SectionButton>
-              <SectionButton active={section === 'profile'} onClick={() => setSection('profile')}>Profile</SectionButton>
-              <SectionButton active={section === 'raw'} onClick={() => setSection('raw')}>Raw data.jsx</SectionButton>
+            {/* Dropdown to select which section to edit */}
+            <div className="mb-3">
+              {(() => {
+                const options = ['Projects', 'Collaborators', 'Profile', 'Raw data.jsx'];
+                const toValue = (label) => {
+                  if (label === 'Projects') return 'projects';
+                  if (label === 'Collaborators') return 'collaborators';
+                  if (label === 'Profile') return 'profile';
+                  return 'raw';
+                };
+                const fromValue = (val) => ({
+                  projects: 'Projects',
+                  collaborators: 'Collaborators',
+                  profile: 'Profile',
+                  raw: 'Raw data.jsx',
+                }[val] || 'Projects');
+                return (
+                  <Dropdown
+                    header="Select section"
+                    label={fromValue(section)}
+                    options={options}
+                    dark={true}
+                    onSelect={(opt) => setSection(toValue(opt))}
+                  />
+                );
+              })()}
             </div>
           </aside>
           <main className="col-span-12 md:col-span-9">
             {section === 'projects' && (
-              <ProjectsForm projects={projects} onChange={setProjects} />
+              <ProjectsForm projects={projects} onChange={setProjects} collaborators={collaborators} />
             )}
             {section === 'collaborators' && (
               <CollaboratorsForm collaborators={collaborators} onChange={setCollaborators} />
