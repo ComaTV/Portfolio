@@ -1,18 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Button, Container, Input, Toggle, Dropdown } from 'mc-ui-comatv';
+import { Button, Scrollbar, Container, Input, Toggle, Dropdown } from 'mc-ui-comatv';
 import { projectsData as initialProjects, collaborators as initialCollaborators, profileData as initialProfile } from '../server/data';
-
-const SectionButton = ({ active, onClick, children }) => (
-  <Button
-    label={typeof children === 'string' ? children : undefined}
-    onClick={onClick}
-    variant={active ? 'green' : 'default'}
-    fullWidth
-    className="!justify-start"
-  >
-    {typeof children === 'string' ? null : children}
-  </Button>
-);
 
 const StorageKey = 'admin-editor-data-v1';
 
@@ -53,25 +41,26 @@ async function fileToDataUrl(file) {
 }
 
 // Image picker: allow path or upload with preview
-const ImagePicker = ({ label = 'Image', value, onChange }) => {
+const ImagePicker = ({ label, value, onChange }) => {
+  const fileRef = useRef(null);
   const handleFile = async (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const url = await fileToDataUrl(f);
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const url = await fileToDataUrl(file);
     onChange(url);
   };
   return (
     <Field label={label}>
       <div className="space-y-2">
-        <Input placeholder="image path or URL" defaultValue={value} onChange={(val) => onChange(val)} />
         <div className="flex items-center gap-2">
-          <input type="file" accept="image/*" onChange={handleFile} />
-          <div className="text-xs text-gray-600">Poți încărca o imagine (va fi salvată ca Data URL în date)</div>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+          <Button label="Alege imagine" variant="green" onClick={() => fileRef.current?.click()} />
+          {value ? <Button label="Remove" variant="red" onClick={() => onChange('')} /> : null}
         </div>
         {value ? (
-          <div className="border rounded p-2 bg-white/70">
+          <Container variant="transparent" className=" p-2">
             <img src={value} alt="preview" className="max-h-40 object-contain" />
-          </div>
+          </Container>
         ) : null}
       </div>
     </Field>
@@ -152,12 +141,6 @@ const ProfileForm = ({ value, onChange }) => {
 // Minimal array-of-strings editor (for media)
 const StringListEditor = ({ label, values, onChange, placeholder, enableUpload }) => {
   const fileInputRef = useRef(null);
-  const add = () => onChange([...(values || []), '']);
-  const update = (i, val) => {
-    const next = [...(values || [])];
-    next[i] = val;
-    onChange(next);
-  };
   const remove = (i) => {
     const next = [...(values || [])];
     next.splice(i, 1);
@@ -178,28 +161,33 @@ const StringListEditor = ({ label, values, onChange, placeholder, enableUpload }
           <div className="flex items-center gap-3">
             <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={addFiles} className="hidden" />
             <Button label="Upload images" variant="green" onClick={() => fileInputRef.current?.click()} />
+            {(values || []).length ? (
+              <Button label="Clear all" variant="red" onClick={() => onChange([])} />
+            ) : null}
           </div>
         )}
-        <div className="max-h-96 overflow-y-auto rounded border border-gray-200 bg-white/70 p-2">
-          {!(values || []).length ? (
-            <div className="text-sm text-gray-500">Nicio imagine adăugată încă.</div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {(values || []).map((v, i) => (
-                <div key={i} className="relative group">
-                  {v ? (
-                    <img src={v} alt={`media-${i}`} className="w-full h-40 md:h-48 object-cover rounded border" />
-                  ) : (
-                    <div className="w-full h-40 md:h-48 rounded border bg-gray-100" />
-                  )}
-                  <div className="absolute top-2 right-2 opacity-90 group-hover:opacity-100">
-                    <Button label="Remove" variant="red" onClick={() => remove(i)} />
+        <Container variant="transparent">
+          <Scrollbar grid={true} gridCols={3} height="400px" >
+            {!(values || []).length ? (
+              <div className="text-sm text-gray-500">Nicio imagine adaugată inca.</div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {(values || []).map((v, i) => (
+                  <div key={i} className="relative group">
+                    {v ? (
+                      <img src={v} alt={`media-${i}`} className="w-full h-40 md:h-48 object-cover rounded border" />
+                    ) : (
+                      <div className="w-full h-40 md:h-48 rounded border bg-gray-100" />
+                    )}
+                    <div className="absolute top-2 right-2 opacity-90 group-hover:opacity-100">
+                      <Button label="Remove" variant="red" onClick={() => remove(i)} />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </Scrollbar>
+        </Container>
       </div>
     </Field>
   );
@@ -240,7 +228,7 @@ const PairListEditor = ({ label, items = [], onChange, fields }) => {
 };
 
 // Basic Project editor (core fields)
-const ProjectsForm = ({ projects, onChange, collaborators = [] }) => {
+const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
   const [index, setIndex] = useState(0);
   const current = projects[index] || {};
   const updateCurrent = (patch) => {
@@ -289,28 +277,40 @@ const ProjectsForm = ({ projects, onChange, collaborators = [] }) => {
       {projects.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Title"><Input defaultValue={current.title} onChange={(val) => updateCurrent({ title: val })} placeholder="Title" /></Field>
-          {/* Category editor supports both string and object forms */}
-          <Field label="Category Name"><Input defaultValue={typeof current.category === 'object' ? (current.category?.name || '') : (current.category || '')} onChange={(val) => {
-            const prev = current.category;
-            if (prev && typeof prev === 'object') {
-              updateCurrent({ category: { ...prev, name: val } });
-            } else {
-              updateCurrent({ category: { name: val, color: '' } });
-            }
-          }} placeholder="Category" /></Field>
-          <Field label="Category Color"><Input defaultValue={typeof current.category === 'object' ? (current.category?.color || '') : ''} onChange={(val) => {
-            const prev = current.category;
-            if (prev && typeof prev === 'object') {
-              updateCurrent({ category: { ...prev, color: val } });
-            } else {
-              updateCurrent({ category: { name: prev || '', color: val } });
-            }
-          }} placeholder="e.g. cyan/blue/green..." /></Field>
+          {/* Category selector from profile.categories */}
+          <Field label="Category">
+            {(() => {
+              const categories = (profile?.categories || []).filter(c => c && c.name);
+              const options = ['None', ...categories.map(c => c.name)];
+              const selectedName = typeof current.category === 'object' ? (current.category?.name || '') : (current.category || '');
+              const label = selectedName && options.includes(selectedName) ? selectedName : (selectedName || 'None');
+              return (
+                <>
+                  <Dropdown
+                    header="Select category"
+                    label={label}
+                    options={options}
+                    dark={true}
+                    onSelect={(opt) => {
+                      if (opt === 'None') {
+                        updateCurrent({ category: { name: '', color: '' } });
+                        return;
+                      }
+                      const found = categories.find(c => c.name === opt);
+                      if (found) updateCurrent({ category: { name: found.name, color: found.color || '' } });
+                    }}
+                  />
+                  {!categories.length ? (
+                    <div className="text-xs text-gray-500 mt-1">No categories in Profile. Add some under Profile &gt; Categories.</div>
+                  ) : null}
+                </>
+              );
+            })()}
+          </Field>
           <Field label="Date"><Input defaultValue={current.date} onChange={(val) => updateCurrent({ date: val })} placeholder="YYYY-MM-DD" /></Field>
-          <ImagePicker label="Image" value={current.image} onChange={(val) => updateCurrent({ image: val })} />
           <div className="md:col-span-2">
             <Field label="Description">
-              <Input placeholder={current.description} onChange={(e) => updateCurrent({ description: e.target.value })} />
+              <Input defaultValue={current.description} placeholder="Description" onChange={(val) => updateCurrent({ description: val })} />
             </Field>
           </div>
           <div className="md:col-span-2">
@@ -337,18 +337,54 @@ const ProjectsForm = ({ projects, onChange, collaborators = [] }) => {
             })()}
           </Field>
           <div className="md:col-span-2">
-            <StringListEditor label="Media (list)" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" enableUpload={true} />
+            <ImagePicker label="Image" value={current.image} onChange={(val) => updateCurrent({ image: val })} />
           </div>
           <div className="md:col-span-2">
-            <PairListEditor
-              label="Technologies (name + color)"
-              items={current.technologies || []}
-              onChange={(val) => updateCurrent({ technologies: val })}
-              fields={[
-                { key: 'name', placeholder: 'name (e.g. javascript, node, MongoDB)' },
-                { key: 'color', placeholder: 'color (e.g. yellow, green, gray)' },
-              ]}
-            />
+            <StringListEditor label="Media" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" enableUpload={true} />
+          </div>
+          {/* Technologies selector from profile.technologies */}
+          <div className="md:col-span-2">
+            {(() => {
+              const techs = (profile?.technologies || []).filter(t => t && t.name);
+              const options = techs.length ? techs.map(t => t.name) : [];
+              const selected = current.technologies || [];
+              const addTech = (name) => {
+                const found = techs.find(t => t.name === name);
+                if (!found) return;
+                if (selected.some(s => s.name === found.name)) return;
+                updateCurrent({ technologies: [...selected, { name: found.name, color: found.color || '' }] });
+              };
+              const removeTech = (name) => {
+                updateCurrent({ technologies: selected.filter(s => s.name !== name) });
+              };
+              return (
+                <Container variant="form">
+                  <div className="space-y-2">
+                    <Field label="Add technology">
+                      <Dropdown
+                        header="Select technology"
+                        label={options.length ? 'Select...' : 'No technologies in profile'}
+                        options={options}
+                        dark={true}
+                        onSelect={(opt) => addTech(opt)}
+                      />
+                      {!techs.length ? (
+                        <div className="text-xs text-gray-500 mt-1">No technologies in Profile. Add some under Profile &gt; Technologies.</div>
+                      ) : null}
+                    </Field>
+                    <div className="flex flex-wrap gap-2">
+                      {(selected).map((t, i) => (
+                        <div key={i} className="flex items-center gap-2 rounded border px-2 py-1 bg-white/80">
+                          <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: t.color || '#9CA3AF' }} />
+                          <span className="text-sm">{t.name}</span>
+                          <Button label="Remove" variant="red" onClick={() => removeTech(t.name)} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Container>
+              );
+            })()}
           </div>
           <div className="md:col-span-2">
             <PairListEditor
@@ -419,14 +455,16 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Title"><Input defaultValue={current.title} onChange={(val) => updateCurrent({ title: val })} placeholder="Title" /></Field>
           <Field label="Date"><Input defaultValue={current.date} onChange={(val) => updateCurrent({ date: val })} placeholder="YYYY-MM-DD" /></Field>
-          <Field label="Image"><Input defaultValue={current.image} onChange={(val) => updateCurrent({ image: val })} placeholder="image path" /></Field>
+          <div className="md:col-span-2">
+            <ImagePicker label="Image" value={current.image} onChange={(val) => updateCurrent({ image: val })} />
+          </div>
           <div className="md:col-span-2">
             <Field label="Description">
               <Input placeholder={current.description} onChange={(e) => updateCurrent({ description: e.target.value })} />
             </Field>
           </div>
           <div className="md:col-span-2">
-            <StringListEditor label="Media (list)" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" />
+            <StringListEditor label="Media" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" enableUpload={true} />
           </div>
           <div className="md:col-span-2">
             <h4 className="font-semibold mb-2">Social</h4>
@@ -488,9 +526,6 @@ export default function AdminPage() {
     try { localStorage.removeItem(StorageKey); } catch {}
   };
 
-  const exampleProject = initialProjects[0];
-  const exampleCollaborator = initialCollaborators[0];
-
   return (
     <div className="h-full w-full text-gray-900">
       <Container>
@@ -534,7 +569,7 @@ export default function AdminPage() {
           </aside>
           <main className="col-span-12 md:col-span-9">
             {section === 'projects' && (
-              <ProjectsForm projects={projects} onChange={setProjects} collaborators={collaborators} />
+              <ProjectsForm projects={projects} onChange={setProjects} collaborators={collaborators} profile={profile} />
             )}
             {section === 'collaborators' && (
               <CollaboratorsForm collaborators={collaborators} onChange={setCollaborators} />

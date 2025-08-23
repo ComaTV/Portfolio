@@ -774,10 +774,10 @@ export const profileData = {
   description: "Just a guy who likes to code",
   location: "US",
   experience: "3+ years",
-  social: {
-    github: "https://github.com/ComaTV4776",
-    linkedin: "https://linkedin.com/in/ComaTV4776",
-    discord: "ComaTV#4776"
-  }
+  social: [
+    {name: "GitHub", link: "https://github.com/ComaTV4776"},
+    {name: "LinkedIn", link: "https://linkedin.com/in/ComaTV4776"},
+    {name: "Discord", link: "ComaTV#4776"}
+  ]
 };
 

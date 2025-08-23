@@ -7,6 +7,12 @@ const ProfileInfo = () => {
   const skinViewerRef = useRef(null);
   const canvasRef = useRef(null);
 
+  const socialArray = Array.isArray(profileData.social) ? profileData.social : [];
+  const iconPathFor = (name) => {
+    const key = String(name || '').toLowerCase().replace(/\s+/g, '').replace(/\./g, '');
+    return `techno/${key}.webp`;
+  };
+
   useEffect(() => {
     if (canvasRef.current && !skinViewerRef.current) {
       try {
@@ -63,20 +69,32 @@ const ProfileInfo = () => {
               </div>
             </div>
             <p className="text-sm text-gray-300 break-words">{profileData.description}</p>
-            <div className="flex items-center justify-start space-x-3">
-              <a href={profileData.social.github} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                <img src="techno/github.webp" alt="GitHub" className="w-7 h-7 object-contain" />
-              </a>
-              <a href={profileData.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                <img src="techno/linkdl.webp" alt="LinkedIn" className="w-7 h-7 object-contain" />
-              </a>
-              <a href={profileData.social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                <img src="techno/instagram.webp" alt="Instagram" className="w-7 h-7 object-contain" />
-              </a>
-              <span className="flex items-center space-x-1 text-gray-400">
-                <img src="techno/discord.webp" alt="Discord" className="w-7 h-7 object-contain" />
-                <span className="text-xs">{profileData.social.discord}</span>
-              </span>
+            <div className="flex items-center justify-start gap-3 flex-wrap">
+              {socialArray.map((s, i) => {
+                const isUrl = !!(s?.link && /^https?:\/\//i.test(s.link));
+                const iconSrc = iconPathFor(s?.name);
+                const iconImg = (
+                  <img
+                    src={iconSrc}
+                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'techno/internet.webp'; }}
+                    alt={s?.name || 'link'}
+                    className="w-5 h-5 object-contain"
+                    title={s?.name}
+                  />
+                );
+                return (
+                  <span key={i} className="flex items-center gap-1 text-xs text-gray-300">
+                    {isUrl ? (
+                      <a href={s.link} target="_blank" rel="noopener noreferrer" className="hover:opacity-90" title={s?.name}>
+                        {iconImg}
+                      </a>
+                    ) : (
+                      <>{iconImg}</>
+                    )}
+                    {!isUrl && s?.link ? <span>{s.link}</span> : null}
+                  </span>
+                );
+              })}
             </div>
             <div className="border-t border-gray-600"/>
             <div>
