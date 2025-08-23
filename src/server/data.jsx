@@ -728,11 +728,11 @@ export const collaborators = [
       "panorama/panorama_1.png",
       "panorama/panorama_2.png"
     ],
-    social: {
-      github: "https://github.com/ComaTV4776",
-      linkedin: "https://linkedin.com/in/ComaTV4776",
-      discord: "ComaTV#4776"
-    }
+    social: [
+      { name: "GitHub", link: "https://github.com/ComaTV4776" },
+      { name: "LinkedIn", link: "https://linkedin.com/in/ComaTV4776" },
+      { name: "Discord", link: "ComaTV#4776" }
+    ]
   },
   {
     id: 2,
@@ -744,11 +744,11 @@ export const collaborators = [
       "panorama/panorama_3.png",
       "panorama/panorama_4.png"
     ],
-    social: {
-      github: "https://github.com/ComaTV4776",
-      linkedin: "https://linkedin.com/in/ComaTV4776",
-      discord: "ComaTV#4776"
-    }
+    social: [
+      { name: "GitHub", link: "https://github.com/ComaTV4776" },
+      { name: "LinkedIn", link: "https://linkedin.com/in/ComaTV4776" },
+      { name: "Discord", link: "ComaTV#4776" }
+    ]
   },
   {
     id: 3,
@@ -760,11 +760,11 @@ export const collaborators = [
       "panorama/panorama_5.png",
       "panorama/panorama_2.png"
     ],
-    social: {
-      github: "https://github.com/ComaTV4776",
-      linkedin: "https://linkedin.com/in/ComaTV4776",
-      discord: "ComaTV#4776"
-    }
+    social: [
+      { name: "GitHub", link: "https://github.com/ComaTV4776" },
+      { name: "LinkedIn", link: "https://linkedin.com/in/ComaTV4776" },
+      { name: "Discord", link: "ComaTV#4776" }
+    ]
   }
 ]
 export const profileData = {

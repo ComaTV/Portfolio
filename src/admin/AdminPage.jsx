@@ -54,11 +54,11 @@ const ImagePicker = ({ label, value, onChange }) => {
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
-          <Button label="Alege imagine" variant="green" onClick={() => fileRef.current?.click()} />
+          <Button label="Select Image" variant="green" onClick={() => fileRef.current?.click()} />
           {value ? <Button label="Remove" variant="red" onClick={() => onChange('')} /> : null}
         </div>
         {value ? (
-          <Container variant="transparent" className=" p-2">
+          <Container variant="outlined" className=" p-2">
             <img src={value} alt="preview" className="max-h-40 object-contain" />
           </Container>
         ) : null}
@@ -67,30 +67,34 @@ const ImagePicker = ({ label, value, onChange }) => {
   );
 };
 
+// Tailwind-like color names for dropdowns (profile: technologies/categories color)
+const COLOR_OPTIONS = [
+  'red','orange','amber','yellow','lime','green','emerald','teal','cyan','sky','blue','indigo','violet','purple','fuchsia','pink','rose','slate','gray','zinc','neutral','stone'
+];
+
 // Profile form editor
 const ProfileForm = ({ value, onChange }) => {
   const update = (patch) => onChange({ ...value, ...patch });
-  const social = value.social || {};
   return (
     <Container variant="form">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="md:col-span-2">
+          <ImagePicker label="Avatar" value={value.avatar} onChange={(val) => update({ avatar: val })} />
+        </div>
         <Field label="Name">
-          <Input placeholder="Name" defaultValue={value.name} onChange={(val) => update({ name: val })} />
+          <Input placeholder={value.name} onChange={(val) => update({ name: val })} />
+        </Field>
+        
+        <Field label="Location">
+          <Input placeholder={value.location} onChange={(val) => update({ location: val })} />
+        </Field>
+        <Field label="Experience">
+          <Input placeholder={value.experience} onChange={(val) => update({ experience: val })} />
         </Field>
         <Field label="Status">
           <div className="flex items-center gap-2">
             <Toggle checked={!!value.status} onChange={(checked) => update({ status: checked })} />
-            <span>Active</span>
           </div>
-        </Field>
-        <Field label="Avatar">
-          <Input placeholder="avatar path" defaultValue={value.avatar} onChange={(val) => update({ avatar: val })} />
-        </Field>
-        <Field label="Location">
-          <Input placeholder="Location" defaultValue={value.location} onChange={(val) => update({ location: val })} />
-        </Field>
-        <Field label="Experience">
-          <Input placeholder="Experience" defaultValue={value.experience} onChange={(val) => update({ experience: val })} />
         </Field>
         <div className="md:col-span-2">
           <Field label="Description">
@@ -98,18 +102,15 @@ const ProfileForm = ({ value, onChange }) => {
           </Field>
         </div>
         <div className="md:col-span-2">
-          <h4 className="font-semibold mb-2">Social</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Field label="GitHub">
-              <Input placeholder="GitHub URL" defaultValue={social.github} onChange={(val) => update({ social: { ...social, github: val } })} />
-            </Field>
-            <Field label="LinkedIn">
-              <Input placeholder="LinkedIn URL" defaultValue={social.linkedin} onChange={(val) => update({ social: { ...social, linkedin: val } })} />
-            </Field>
-            <Field label="Discord">
-              <Input placeholder="Discord" defaultValue={social.discord} onChange={(val) => update({ social: { ...social, discord: val } })} />
-            </Field>
-          </div>
+          <PairListEditor
+            label="Social (name + link)"
+            items={Array.isArray(value.social) ? value.social : []}
+            onChange={(val) => update({ social: val })}
+            fields={[
+              { key: 'name', placeholder: 'e.g. GitHub / YouTube / Website' },
+              { key: 'link', placeholder: 'https://example.com or username' },
+            ]}
+          />
         </div>
         <div className="md:col-span-2">
           <PairListEditor
@@ -118,7 +119,7 @@ const ProfileForm = ({ value, onChange }) => {
             onChange={(val) => update({ technologies: val })}
             fields={[
               { key: 'name', placeholder: 'e.g. javascript, node, MongoDB' },
-              { key: 'color', placeholder: 'e.g. yellow, green, gray' },
+              { key: 'color', placeholder: 'Select color', type: 'dropdown', options: COLOR_OPTIONS },
             ]}
           />
         </div>
@@ -129,7 +130,7 @@ const ProfileForm = ({ value, onChange }) => {
             onChange={(val) => update({ categories: val })}
             fields={[
               { key: 'name', placeholder: 'e.g. Web Development, Mobile App' },
-              { key: 'color', placeholder: 'e.g. cyan, white, blue' },
+              { key: 'color', placeholder: 'Select color', type: 'dropdown', options: COLOR_OPTIONS },
             ]}
           />
         </div>
@@ -175,9 +176,9 @@ const StringListEditor = ({ label, values, onChange, placeholder, enableUpload }
                 {(values || []).map((v, i) => (
                   <div key={i} className="relative group">
                     {v ? (
-                      <img src={v} alt={`media-${i}`} className="w-full h-40 md:h-48 object-cover rounded border" />
+                      <img src={v} alt={`media-${i}`} className="w-full h-40 md:h-48 object-cover" />
                     ) : (
-                      <div className="w-full h-40 md:h-48 rounded border bg-gray-100" />
+                      <div className="w-full h-40 md:h-48 " />
                     )}
                     <div className="absolute top-2 right-2 opacity-90 group-hover:opacity-100">
                       <Button label="Remove" variant="red" onClick={() => remove(i)} />
@@ -211,11 +212,29 @@ const PairListEditor = ({ label, items = [], onChange, fields }) => {
       <div className="space-y-2">
         {(items || []).map((it, i) => (
           <div key={i} className="grid grid-cols-12 gap-2 items-center">
-            {fields.map((f, idx) => (
-              <div key={f.key} className={fields.length === 2 ? 'col-span-5' : 'col-span-4'}>
-                <Input placeholder={f.placeholder} defaultValue={it[f.key] || ''} onChange={(val) => update(i, f.key, val)} />
-              </div>
-            ))}
+            {fields.map((f) => {
+              const val = it[f.key] || '';
+              const colClass = fields.length === 2 ? 'col-span-5' : 'col-span-4';
+              if (f.type === 'dropdown' && Array.isArray(f.options)) {
+                const label = val || (f.placeholder || 'Select...');
+                return (
+                  <div key={f.key} className={colClass}>
+                    <Dropdown
+                      header={`Select ${f.key}`}
+                      label={label}
+                      options={f.options}
+                      dark={true}
+                      onSelect={(opt) => update(i, f.key, opt)}
+                    />
+                  </div>
+                );
+              }
+              return (
+                <div key={f.key} className={colClass}>
+                  <Input placeholder={val} onChange={(val) => update(i, f.key, val)} />
+                </div>
+              );
+            })}
             <div className="col-span-2 flex justify-end">
               <Button label="Remove" variant="red" onClick={() => remove(i)} />
             </div>
@@ -300,14 +319,30 @@ const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
                       if (found) updateCurrent({ category: { name: found.name, color: found.color || '' } });
                     }}
                   />
-                  {!categories.length ? (
-                    <div className="text-xs text-gray-500 mt-1">No categories in Profile. Add some under Profile &gt; Categories.</div>
-                  ) : null}
                 </>
               );
             })()}
           </Field>
-          <Field label="Date"><Input defaultValue={current.date} onChange={(val) => updateCurrent({ date: val })} placeholder="YYYY-MM-DD" /></Field>
+          <Field label="Date">
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                className="px-2 py-1 rounded border border-gray-300 bg-white/90 text-gray-900 text-sm"
+                value={current.date || ''}
+                onChange={(e) => updateCurrent({ date: e.target.value })}
+              />
+              <Button label="Today" variant="green" onClick={() => {
+                const d = new Date();
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                updateCurrent({ date: `${yyyy}-${mm}-${dd}` });
+              }} />
+              {current.date ? (
+                <Button label="Clear" variant="red" onClick={() => updateCurrent({ date: '' })} />
+              ) : null}
+            </div>
+          </Field>
           <div className="md:col-span-2">
             <Field label="Description">
               <Input defaultValue={current.description} placeholder="Description" onChange={(val) => updateCurrent({ description: val })} />
@@ -320,21 +355,23 @@ const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
             </div>
           </div>
           <Field label="Collaboration">
-            {(() => {
-              const options = ['None', ...collaborators.map((c) => c.title)];
-              const label = current.collaboration && options.includes(current.collaboration)
-                ? current.collaboration
-                : (current.collaboration ? current.collaboration : 'None');
-              return (
-                <Dropdown
-                  header="Select collaborator"
-                  label={label}
-                  options={options}
-                  dark={true}
-                  onSelect={(opt) => updateCurrent({ collaboration: opt === 'None' ? '' : opt })}
-                />
-              );
-            })()}
+            <div className="space-y-2">
+              {(() => {
+                const options = ['None', ...collaborators.map((c) => c.title)];
+                const label = current.collaboration && options.includes(current.collaboration)
+                  ? current.collaboration
+                  : (current.collaboration ? current.collaboration : 'None');
+                return (
+                  <Dropdown
+                    header="Select collaborator"
+                    label={label}
+                    options={options}
+                    dark={true}
+                    onSelect={(opt) => updateCurrent({ collaboration: opt === 'None' ? '' : opt })}
+                  />
+                );
+              })()}
+            </div>
           </Field>
           <div className="md:col-span-2">
             <ImagePicker label="Image" value={current.image} onChange={(val) => updateCurrent({ image: val })} />
@@ -358,7 +395,7 @@ const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
                 updateCurrent({ technologies: selected.filter(s => s.name !== name) });
               };
               return (
-                <Container variant="form">
+                <Container variant="outlined">
                   <div className="space-y-2">
                     <Field label="Add technology">
                       <Dropdown
@@ -368,18 +405,28 @@ const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
                         dark={true}
                         onSelect={(opt) => addTech(opt)}
                       />
-                      {!techs.length ? (
-                        <div className="text-xs text-gray-500 mt-1">No technologies in Profile. Add some under Profile &gt; Technologies.</div>
-                      ) : null}
                     </Field>
                     <div className="flex flex-wrap gap-2">
-                      {(selected).map((t, i) => (
-                        <div key={i} className="flex items-center gap-2 rounded border px-2 py-1 bg-white/80">
-                          <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: t.color || '#9CA3AF' }} />
-                          <span className="text-sm">{t.name}</span>
-                          <Button label="Remove" variant="red" onClick={() => removeTech(t.name)} />
-                        </div>
-                      ))}
+                      {(selected).map((t, i) => {
+                        const key = String(t?.name || '').toLowerCase().replace(/\s+/g, '').replace(/\./g, '');
+                        // minimal aliasing for common tech names
+                        const alias = {
+                          js: 'javascript',
+                          ts: 'typescript',
+                          'c#': 'cs',
+                          'c++': 'cpp',
+                          python: 'py'
+                        };
+                        const iconKey = alias[key] || key;
+                        const icon = `techno/${iconKey}.webp`;
+                        return (
+                          <Container key={i} className="flex items-center gap-2">
+                            <img src={icon} alt={t?.name || 'tech'} className="h-5 w-5 object-contain" />
+                            <span className="text-sm" style={{ color: t.color || '#111827' }}>{t.name}</span>
+                            <Button label="Remove" variant="red" onClick={() => removeTech(t.name)} />
+                          </Container>
+                        );
+                      })}
                     </div>
                   </div>
                 </Container>
@@ -414,7 +461,7 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
   const addItem = () => {
     const next = [
       ...collaborators,
-      { id: (collaborators[collaborators.length - 1]?.id || 0) + 1, title: 'New', description: '', image: '', date: '', media: [], social: {} }
+      { id: (collaborators[collaborators.length - 1]?.id || 0) + 1, title: 'New', description: '', image: '', date: '', media: [], social: [] }
     ];
     onChange(next);
     setIndex(next.length - 1);
@@ -425,7 +472,7 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
     onChange(next);
     setIndex(0);
   };
-  const social = current.social || {};
+  const social = Array.isArray(current.social) ? current.social : [];
   return (
     <Container variant="form">
       <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -454,25 +501,41 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
       {collaborators.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Title"><Input defaultValue={current.title} onChange={(val) => updateCurrent({ title: val })} placeholder="Title" /></Field>
-          <Field label="Date"><Input defaultValue={current.date} onChange={(val) => updateCurrent({ date: val })} placeholder="YYYY-MM-DD" /></Field>
-          <div className="md:col-span-2">
-            <ImagePicker label="Image" value={current.image} onChange={(val) => updateCurrent({ image: val })} />
-          </div>
+          <Field label="Date">
+            {(() => {
+              const safeDate = typeof current.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(current.date) ? current.date : '';
+              return (
+                <input
+                  type="date"
+                  value={safeDate}
+                  onChange={(e) => updateCurrent({ date: e.target.value })}
+                  className="w-full rounded border border-gray-300 bg-white/90 px-3 py-2 text-gray-900"
+                />
+              );
+            })()}
+          </Field>
+          
           <div className="md:col-span-2">
             <Field label="Description">
               <Input placeholder={current.description} onChange={(e) => updateCurrent({ description: e.target.value })} />
             </Field>
           </div>
           <div className="md:col-span-2">
+            <ImagePicker label="Image" value={current.image} onChange={(val) => updateCurrent({ image: val })} />
+          </div>
+          <div className="md:col-span-2">
             <StringListEditor label="Media" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" enableUpload={true} />
           </div>
           <div className="md:col-span-2">
-            <h4 className="font-semibold mb-2">Social</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Field label="GitHub"><Input placeholder="GitHub URL" defaultValue={social.github} onChange={(val) => updateCurrent({ social: { ...social, github: val } })} /></Field>
-              <Field label="LinkedIn"><Input placeholder="LinkedIn URL" defaultValue={social.linkedin} onChange={(val) => updateCurrent({ social: { ...social, linkedin: val } })} /></Field>
-              <Field label="Discord"><Input placeholder="Discord" defaultValue={social.discord} onChange={(val) => updateCurrent({ social: { ...social, discord: val } })} /></Field>
-            </div>
+            <PairListEditor
+              label="Social (name + link)"
+              items={social}
+              onChange={(val) => updateCurrent({ social: val })}
+              fields={[
+                { key: 'name', placeholder: 'e.g. GitHub / YouTube / Website' },
+                { key: 'link', placeholder: 'https://example.com or username' },
+              ]}
+            />
           </div>
         </div>
       )}
@@ -542,18 +605,17 @@ export default function AdminPage() {
             {/* Dropdown to select which section to edit */}
             <div className="mb-3">
               {(() => {
-                const options = ['Projects', 'Collaborators', 'Profile', 'Raw data.jsx'];
+                const options = ['Projects', 'Collaborators', 'Profile'];
                 const toValue = (label) => {
                   if (label === 'Projects') return 'projects';
                   if (label === 'Collaborators') return 'collaborators';
                   if (label === 'Profile') return 'profile';
-                  return 'raw';
+                  return 'projects';
                 };
                 const fromValue = (val) => ({
                   projects: 'Projects',
                   collaborators: 'Collaborators',
                   profile: 'Profile',
-                  raw: 'Raw data.jsx',
                 }[val] || 'Projects');
                 return (
                   <Dropdown
@@ -568,26 +630,23 @@ export default function AdminPage() {
             </div>
           </aside>
           <main className="col-span-12 md:col-span-9">
-            {section === 'projects' && (
-              <ProjectsForm projects={projects} onChange={setProjects} collaborators={collaborators} profile={profile} />
-            )}
-            {section === 'collaborators' && (
-              <CollaboratorsForm collaborators={collaborators} onChange={setCollaborators} />
-            )}
-            {section === 'profile' && (
-              <ProfileForm value={profile} onChange={setProfile} />
-            )}
-            {section === 'raw' && (
-              <Container>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">Generated data.jsx (read-only)</h3>
-                  <textarea className="w-full h-96 p-3 font-mono text-xs rounded border border-gray-300 bg-white/90 text-gray-900" value={dataJsText} readOnly spellCheck={false} />
-                  <div className="text-sm text-gray-700">
-                    Use "Export data.jsx" to download and replace the file at <code>src/server/data.jsx</code> for permanent changes.
-                  </div>
-                </div>
-              </Container>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                {section === 'projects' && (
+                  <ProjectsForm projects={projects} onChange={setProjects} collaborators={collaborators} profile={profile} />
+                )}
+                {section === 'collaborators' && (
+                  <CollaboratorsForm collaborators={collaborators} onChange={setCollaborators} />
+                )}
+                {section === 'profile' && (
+                  <ProfileForm value={profile} onChange={setProfile} />
+                )}
+              </div>
+              <Container className="w-[600px]">
+                    <h3 className="text-lg font-semibold">Generated data.jsx (read-only)</h3>
+                    <textarea className="h-screen p-3 font-mono text-xs bg-gray-800 text-white" value={dataJsText} readOnly spellCheck={false} />
+                </Container>
+            </div>
           </main>
         </div>
       </div>

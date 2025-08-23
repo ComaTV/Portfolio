@@ -27,17 +27,14 @@ const CollaboratorsSection = () => {
           style={{ gap: 0, padding: 0, margin: 0 }}
         >
           {collaborators.map((c) => {
-            const social = c.social || {};
-            const iconMap = {
-              github: 'techno/github.webp',
-              linkedin: 'techno/linkdl.webp',
-              discord: 'techno/discord.webp',
-              instagram: 'techno/instagram.webp',
-              website: 'techno/internet.webp'
+            const socialArr = Array.isArray(c.social) ? c.social : [];
+            const iconPathFor = (name) => {
+              const key = String(name || '').toLowerCase().replace(/\s+/g, '').replace(/\./g, '');
+              return `techno/${key}.webp`;
             };
-            const iconImages = Object.keys(social)
-              .filter((k) => iconMap[k])
-              .map((k) => iconMap[k]);
+            const iconImages = socialArr
+              .map((s) => iconPathFor(s?.name))
+              .filter(Boolean);
             return (
               <ImageCard
                 key={c.id}

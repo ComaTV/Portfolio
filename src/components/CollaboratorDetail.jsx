@@ -16,16 +16,16 @@ const CollaboratorDetail = () => {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <div className="text-center">
-          <p className="text-xl mb-4">Colaboratorul nu a fost găsit.</p>
+          <p className="text-xl mb-4">Collaborator not found.</p>
           <Button label="Back" variant="green" width={140} height={44} onClick={() => navigate('/')} />
         </div>
       </div>
     );
   }
 
-  const social = collaborator.social || {};
-  const socialEntries = Object.entries(social)
-    .filter(([, url]) => typeof url === 'string' && url.trim().length > 0);
+  const socialArr = Array.isArray(collaborator.social) ? collaborator.social : [];
+  const urlEntries = socialArr.filter((s) => typeof s?.link === 'string' && /^https?:\/\//i.test(s.link));
+  const textEntries = socialArr.filter((s) => typeof s?.link === 'string' && !/^https?:\/\//i.test(s.link));
 
   const projects = projectsData.filter(p => p.collaboration === collaborator.title);
 
@@ -101,16 +101,27 @@ const CollaboratorDetail = () => {
                 {collaborator.description && (
                   <p className="text-gray-200 text-sm leading-relaxed mt-2 pb-4">{collaborator.description}</p>
                 )}
-                {socialEntries.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {socialEntries.map(([name, url]) => (
-                      <Button
-                        key={name}
-                        label={name.charAt(0).toUpperCase() + name.slice(1)}
-                        variant="purple"
-                        onClick={() => openUrl(url)}
-                      />
-                    ))}
+                {(urlEntries.length > 0 || textEntries.length > 0) && (
+                  <div className="flex flex-col gap-2 mb-3">
+                    {urlEntries.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {urlEntries.map((s, i) => (
+                          <Button
+                            key={`${s.name}-${i}`}
+                            label={s.name || 'Link'}
+                            variant="purple"
+                            onClick={() => openUrl(s.link)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    {textEntries.length > 0 && (
+                      <div className="flex flex-wrap gap-3 text-sm text-gray-200">
+                        {textEntries.map((s, i) => (
+                          <span key={`${s.name}-text-${i}`}>{s.name}: {s.link}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

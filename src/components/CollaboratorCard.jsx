@@ -19,29 +19,23 @@ const CollaboratorCard = ({ collaborator, href, onClick }) => {
         <div className="absolute inset-0 p-4 flex flex-col justify-end">
           <h3 className="minecraft-ten text-white text-2xl">{title}</h3>
           <p className="minecraft-font text-gray-200">{description}</p>
-          {social && (
+          {Array.isArray(social) && social.length > 0 && (
             <div className="mt-3 flex items-center gap-4">
-              {social.github && (
-                <a href={social.github} target="_blank" rel="noreferrer" aria-label="GitHub">
-                  <img src={asPublic('techno/github.webp')} alt="GitHub" className="h-6 w-6 object-contain" />
-                </a>
-              )}
-              {social.linkedin && (
-                <a href={social.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn">
-                  <img src={asPublic('techno/linkdl.webp')} alt="LinkedIn" className="h-6 w-6 object-contain" />
-                </a>
-              )}
-              {social.discord && (
-                typeof social.discord === 'string' && social.discord.startsWith('http') ? (
-                  <a href={social.discord} target="_blank" rel="noreferrer" aria-label="Discord">
-                    <img src={asPublic('techno/discord.webp')} alt="Discord" className="h-6 w-6 object-contain" />
+              {social.map((s, i) => {
+                const key = String(s?.name || '').toLowerCase().replace(/\s+/g, '').replace(/\./g, '');
+                const icon = key ? `techno/${key}.webp` : 'techno/internet.webp';
+                const isUrl = typeof s?.link === 'string' && /^https?:\/\//i.test(s.link);
+                const img = <img src={asPublic(icon)} alt={s?.name || 'link'} className="h-6 w-6 object-contain" title={s?.name} />;
+                return isUrl ? (
+                  <a key={`${key}-${i}`} href={s.link} target="_blank" rel="noreferrer" aria-label={s?.name || 'link'}>
+                    {img}
                   </a>
                 ) : (
-                  <span aria-label="Discord" title={typeof social.discord === 'string' ? social.discord : 'Discord'}>
-                    <img src={asPublic('techno/discord.webp')} alt="Discord" className="h-6 w-6 object-contain" />
+                  <span key={`${key}-${i}`} aria-label={s?.name || 'text'} title={s?.link || ''}>
+                    {img}
                   </span>
-                )
-              )}
+                );
+              })}
             </div>
           )}
         </div>
@@ -70,11 +64,10 @@ CollaboratorCard.propTypes = {
     title: PropTypes.string.isRequired,
     description: PropTypes.string,
     image: PropTypes.string.isRequired,
-    social: PropTypes.shape({
-      github: PropTypes.string,
-      linkedin: PropTypes.string,
-      discord: PropTypes.string,
-    }),
+    social: PropTypes.arrayOf(PropTypes.shape({
+      name: PropTypes.string,
+      link: PropTypes.string,
+    })),
   }),
   href: PropTypes.string,
   onClick: PropTypes.func,
