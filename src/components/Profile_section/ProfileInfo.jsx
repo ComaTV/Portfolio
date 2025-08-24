@@ -1,41 +1,74 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Container } from 'mc-ui-comatv';
-import { projectsData, profileData } from '../../server/data.jsx';
 import * as skinview3d from 'skinview3d';
 
 const ProfileInfo = () => {
   const skinViewerRef = useRef(null);
   const canvasRef = useRef(null);
+  const [projectsData, setProjectsData] = useState([]);
+  const [profileData, setProfileData] = useState({});
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const [pRes, profRes] = await Promise.all([
+          fetch('/projects'),
+          fetch('/profile')
+        ]);
+        const [pJson, profJson] = await Promise.all([
+          pRes.ok ? pRes.json() : [],
+          profRes.ok ? profRes.json() : {}
+        ]);
+        if (!mounted) return;
+        setProjectsData(Array.isArray(pJson) ? pJson : []);
+        setProfileData(profJson || {});
+      } catch (e) {
+        if (!mounted) return;
+        setProjectsData([]);
+        setProfileData({});
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const socialArray = Array.isArray(profileData.social) ? profileData.social : [];
   const iconPathFor = (name) => {
     const key = String(name || '').toLowerCase().replace(/\s+/g, '').replace(/\./g, '');
     return `techno/${key}.webp`;
   };
+  const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+  const asPublic = (p) => {
+    if (!p) return p;
+    if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
+    if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
+    return p;
+  };
 
   useEffect(() => {
-    if (canvasRef.current && !skinViewerRef.current) {
-      try {
-        skinViewerRef.current = new skinview3d.SkinViewer({
-          canvas: canvasRef.current,
-          width: 300,
-          height: 400,
-          skin: `https://mc-heads.net/skin/${profileData.name}`
-        });
-
-        skinViewerRef.current.animation = new skinview3d.IdleAnimation();
-        skinViewerRef.current.animation.speed = 2;
-        skinViewerRef.current.zoom = 0.8;
-        skinViewerRef.current.fov = 60;
-      } catch (error) {
-        console.error('Error initializing skin viewer:', error);
-      }
+    if (!profileData.name || !canvasRef.current) return;
+    // optionally clean up existing viewer
+    if (skinViewerRef.current) skinViewerRef.current = null;
+  
+    try {
+      skinViewerRef.current = new skinview3d.SkinViewer({
+        canvas: canvasRef.current,
+        width: 300,
+        height: 400,
+        skin: `https://mc-heads.net/skin/${profileData.name}`
+      });
+      skinViewerRef.current.animation = new skinview3d.IdleAnimation();
+      skinViewerRef.current.animation.speed = 2;
+      skinViewerRef.current.zoom = 0.8;
+      skinViewerRef.current.fov = 60;
+    } catch (e) {
+      console.error('Error initializing skin viewer:', e);
     }
-
+  
     return () => {
       skinViewerRef.current = null;
     };
-  }, []);
+  }, [profileData.name]);
 
   return (
     <div className="w-full">
@@ -45,7 +78,7 @@ const ProfileInfo = () => {
             <div className="flex items-start space-x-4">
               <div className="relative">
                 <div className="w-24 h-24 bg-black p-0.5">
-                  <img src={profileData.avatar} alt={profileData.name} className="w-full h-full object-cover" />
+                  <img src={asPublic(profileData.avatar)} alt={profileData.name} className="w-full h-full object-cover" />
                 </div>
                 {profileData.status && (
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 border-2 border-green-300"></div>
@@ -100,8 +133,8 @@ const ProfileInfo = () => {
             <div>
               <h3 className="text-sm text-white mb-2">Technologies I use:</h3>
               <div className="flex flex-wrap gap-2">
-                {(() => {
-                  const allTechnologies = projectsData.flatMap(project => project.technologies);
+                {useMemo(() => {
+                  const allTechnologies = (projectsData || []).flatMap(project => Array.isArray(project.technologies) ? project.technologies : []);
                   const uniqueTechnologies = [...new Set(allTechnologies.map(tech => tech.name))];
                   return uniqueTechnologies.map((techName) => {
                     const iconSrc = `techno/${techName.toLowerCase().replace('.', '').replace(' ', '')}.webp`;
@@ -117,13 +150,13 @@ const ProfileInfo = () => {
                       />
                     );
                   });
-                })()}
+                }, [projectsData])}
               </div>
             </div>
             <div>
               <h3 className="text-sm text-white mb-2">Platforms I develop on:</h3>
               <div className="flex flex-wrap gap-2">
-                {(() => {
+                {useMemo(() => {
                   // Default mapping for backward compatibility when project.category is a string
                   const defaultCategoryColors = {
                     'Web Development': 'cyan',
@@ -135,7 +168,7 @@ const ProfileInfo = () => {
                   };
 
                   // Normalize categories to { name, color }
-                  const normalized = projectsData.map((project) => {
+                  const normalized = (projectsData || []).map((project) => {
                     const cat = project.category;
                     if (cat && typeof cat === 'object') return { name: cat.name, color: cat.color };
                     const name = cat || 'Unknown';
@@ -160,7 +193,7 @@ const ProfileInfo = () => {
                       </span>
                     );
                   });
-                })()}
+                }, [projectsData])}
               </div>
             </div>
           </div>

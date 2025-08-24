@@ -1,8 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Container, Button } from 'mc-ui-comatv';
-import { projectsData } from '../../server/data.jsx';
 import { useNavigate } from 'react-router-dom';
+
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+const asPublic = (p) => {
+  if (!p) return p;
+  if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
+  if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
+  return p;
+};
 
 const CustomImageCard = ({ project }) => {
   const navigate = useNavigate();
@@ -21,7 +28,7 @@ const CustomImageCard = ({ project }) => {
       onClick={() => navigate(`/projects/${project.id}`)}
     >
       <img
-        src={project.image}
+        src={asPublic(project.image)}
         alt={project.title}
         className="absolute inset-0 h-full w-full object-cover"
       />
@@ -89,6 +96,23 @@ CustomImageCard.propTypes = {
 const RightContainer = () => {
   const [activeTab, setActiveTab] = useState('newProjects');
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
+  const [projectsData, setProjectsData] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch('/projects');
+        const json = res.ok ? await res.json() : [];
+        if (!mounted) return;
+        setProjectsData(Array.isArray(json) ? json : []);
+      } catch {
+        if (!mounted) return;
+        setProjectsData([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const recentProjects = useMemo(() => {
     const now = new Date();
@@ -103,11 +127,11 @@ const RightContainer = () => {
     if (lastTwoMonths.length > 0) return lastTwoMonths;
 
     return sorted.slice(0, 5);
-  }, []);
+  }, [projectsData]);
 
   const bigProjects = useMemo(() => {
     return projectsData.filter(p => p.special);
-  }, []);
+  }, [projectsData]);
 
   const displayedProjects = activeTab === 'newProjects' ? recentProjects : bigProjects;
 

@@ -1,5 +1,4 @@
 import { Container, Scrollbar, Toggle, Checkbox } from 'mc-ui-comatv';
-import { projectsData } from '../../server/data';
 
 const CategoryTogglePanel = ({ allCategories, selectedCategories, onToggleChange }) => {
   const categoryClassMap = {
@@ -21,14 +20,8 @@ const CategoryTogglePanel = ({ allCategories, selectedCategories, onToggleChange
     'Discord Bot': 'purple',
   };
 
-  // Build color map from embedded project categories when available
-  const embeddedCategoryColors = projectsData.reduce((acc, p) => {
-    const cat = p.category;
-    if (cat && typeof cat === 'object' && cat.name) {
-      if (!acc[cat.name] && cat.color) acc[cat.name] = cat.color;
-    }
-    return acc;
-  }, {});
+  // Embedded colors come from backend data; not available here anymore
+  const embeddedCategoryColors = {};
 
   return (
     <div className="w-full lg:w-1/4 xl:w-1/5 min-w-[280px] max-w-full lg:max-w-none">

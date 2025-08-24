@@ -1,30 +1,52 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import TechTogglePanel from './Project_section/TechTogglePanel';
 import CategoryTogglePanel from './Project_section/CategoryTogglePanel';
 import ProjectsView from './Project_section/ProjectsView';
-import { projectsData } from '../server/data';
+// Data now fetched from backend
 
-const allTechnologies = Array.from(
-  new Set(projectsData.flatMap(project => project.technologies.map(tech => tech.name)))
-).map(techName => ({
-  label: techName,
-  icon: `techno/${techName.toLowerCase().replace('.', '').replace(' ', '')}.webp`
-}));
+function buildAllTechnologies(projectsData) {
+  return Array.from(
+    new Set((projectsData || []).flatMap(project => (project.technologies || []).map(tech => tech.name)))
+  ).map(techName => ({
+    label: techName,
+    icon: `techno/${techName.toLowerCase().replace('.', '').replace(' ', '')}.webp`
+  }));
+}
 
-const allCategories = ['Special', ...Array.from(
-  new Set(projectsData.map(project => (typeof project.category === 'object' ? project.category.name : project.category)))
-)];
+function buildAllCategories(projectsData) {
+  return ['Special', ...Array.from(
+    new Set((projectsData || []).map(project => (typeof project.category === 'object' ? project.category.name : project.category)))
+  )];
+}
 
 const ProjectSection = () => {
   const [selectedTechs, setSelectedTechs] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [projectsData, setProjectsData] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch('/projects');
+        const json = res.ok ? await res.json() : [];
+        if (!mounted) return;
+        setProjectsData(Array.isArray(json) ? json : []);
+      } catch {
+        if (!mounted) return;
+        setProjectsData([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const availableTechnologies = useMemo(() => {
+    const allTechnologies = buildAllTechnologies(projectsData);
     if (selectedCategories.length === 0) {
       return allTechnologies;
     }
     const techsInSelectedCategories = new Set();
-    projectsData.forEach(project => {
+    (projectsData || []).forEach(project => {
       const catName = typeof project.category === 'object' ? project.category.name : project.category;
       const isInSelectedCategory = selectedCategories.includes(catName);
       const isSpecialAndSpecialSelected = project.special && selectedCategories.includes('Special');
@@ -34,14 +56,15 @@ const ProjectSection = () => {
     });
 
     return allTechnologies.filter(tech => techsInSelectedCategories.has(tech.label));
-  }, [selectedCategories]);
+  }, [selectedCategories, projectsData]);
 
   const availableCategories = useMemo(() => {
+    const allCategories = buildAllCategories(projectsData);
     if (selectedTechs.length === 0) {
       return allCategories;
     }
     const categoriesWithSelectedTechs = new Set();
-    projectsData.forEach(project => {
+    (projectsData || []).forEach(project => {
       if (selectedTechs.some(tech => project.technologies.some(projectTech => projectTech.name === tech))) {
         const catName = typeof project.category === 'object' ? project.category.name : project.category;
         categoriesWithSelectedTechs.add(catName);
@@ -52,7 +75,7 @@ const ProjectSection = () => {
     });
 
     return allCategories.filter(category => categoriesWithSelectedTechs.has(category));
-  }, [selectedTechs]);
+  }, [selectedTechs, projectsData]);
 
   const handleTechToggleChange = (tech, isChecked) => {
     setSelectedTechs(prev => {
@@ -74,7 +97,7 @@ const ProjectSection = () => {
     });
   };
 
-  const filteredProjects = projectsData.filter(project => {
+  const filteredProjects = (projectsData || []).filter(project => {
     const matchesTech = selectedTechs.length === 0 || 
       selectedTechs.some(tech => project.technologies.some(projectTech => projectTech.name === tech));
     const catName = typeof project.category === 'object' ? project.category.name : project.category;

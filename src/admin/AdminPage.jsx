@@ -1,8 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Button, Scrollbar, Container, Input, Toggle, Dropdown } from 'mc-ui-comatv';
-import { projectsData as initialProjects, collaborators as initialCollaborators, profileData as initialProfile } from '../server/data';
-
-const StorageKey = 'admin-editor-data-v1';
 
 function stringifyJsExport(name, value) {
   // Pretty-print with 2 spaces but keep closer to original style
@@ -12,8 +9,40 @@ function stringifyJsExport(name, value) {
   return `export const ${name} = ${body};\n`;
 }
 
+// Backend base (used for image preview)
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+const toServerUrl = (u) => {
+  if (!u) return '';
+  if (u.startsWith('http://') || u.startsWith('https://')) return u;
+  if (u.startsWith('/uploads/')) return `${API_BASE}${u}`;
+  return u;
+};
+
+// --- Origin allowlist from backend (/health) ---
+let __healthCache = null;
+async function loadHealth() {
+  if (__healthCache) return __healthCache;
+  try {
+    const res = await fetch('/health', { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error('health failed');
+    const json = await res.json();
+    __healthCache = json || { status: 'ok', allowedOrigins: [] };
+  } catch {
+    __healthCache = { status: 'ok', allowedOrigins: [] };
+  }
+  return __healthCache;
+}
+
+async function ensureAllowedOrigin() {
+  const { allowedOrigins = [] } = await loadHealth();
+  const here = window.location.origin.replace(/\/$/, '');
+  const list = (Array.isArray(allowedOrigins) ? allowedOrigins : []).map((s) => String(s || '').replace(/\/$/, '')).filter(Boolean);
+  if (list.length && !list.includes(here)) {
+    throw new Error('Forbidden origin');
+  }
+}
+
 function generateDataJs(projects, collaborators, profile) {
-  const header = '';
   const p = stringifyJsExport('projectsData', projects);
   const c = stringifyJsExport('collaborators', collaborators);
   const pr = stringifyJsExport('profileData', profile);
@@ -30,24 +59,68 @@ const Field = ({ label, children }) => (
 
 // (Removed) CategoryColorsForm – colors are now stored per project under category
 
-// Utility: convert File to data URL
-async function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+// --- API helpers ---
+async function apiGet(pathname) {
+  await ensureAllowedOrigin();
+  const res = await fetch(pathname, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error(`GET ${pathname} failed`);
+  return res.json();
+}
+
+async function apiPut(pathname, body) {
+  await ensureAllowedOrigin();
+  const res = await fetch(pathname, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(body)
   });
+  if (!res.ok) throw new Error(`PUT ${pathname} failed`);
+  return res.json();
+}
+
+async function apiUpload(files, params = {}) {
+  await ensureAllowedOrigin();
+  const fd = new FormData();
+  (files || []).forEach(f => fd.append('files', f));
+  const qs = new URLSearchParams();
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (v === undefined || v === null) return;
+    qs.set(k, String(v));
+  });
+  const url = qs.toString() ? `/upload?${qs.toString()}` : '/upload';
+  const res = await fetch(url, { method: 'POST', body: fd });
+  if (!res.ok) throw new Error('Upload failed');
+  return res.json();
 }
 
 // Image picker: allow path or upload with preview
-const ImagePicker = ({ label, value, onChange }) => {
+const ImagePicker = ({ label, value, onChange, uploadParams }) => {
   const fileRef = useRef(null);
+  const [localPreview, setLocalPreview] = useState('');
+  const [previewVer, setPreviewVer] = useState(0);
   const handleFile = async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    const url = await fileToDataUrl(file);
-    onChange(url);
+    // Show local preview immediately
+    const objUrl = URL.createObjectURL(file);
+    setLocalPreview(objUrl);
+    try {
+      const { files: uploaded } = await apiUpload([file], uploadParams);
+      const url = uploaded?.[0]?.url || '';
+      if (url) {
+        onChange(url);
+        // bump version to bypass cache for constant URLs (e.g., avatar.webp)
+        setPreviewVer(Date.now());
+      }
+    } catch (err) {
+      console.error('Image upload failed', err);
+    } finally {
+      // Release local preview; server image will render next with cache-bust
+      setTimeout(() => {
+        try { URL.revokeObjectURL(objUrl); } catch {}
+        setLocalPreview('');
+      }, 0);
+    }
   };
   return (
     <Field label={label}>
@@ -57,9 +130,19 @@ const ImagePicker = ({ label, value, onChange }) => {
           <Button label="Select Image" variant="green" onClick={() => fileRef.current?.click()} />
           {value ? <Button label="Remove" variant="red" onClick={() => onChange('')} /> : null}
         </div>
-        {value ? (
+        {localPreview || value ? (
           <Container variant="outlined" className=" p-2">
-            <img src={value} alt="preview" className="max-h-40 object-contain" />
+            <img
+              src={
+                localPreview || (
+                  toServerUrl(value) + (
+                    (value && String(value).startsWith('/uploads/')) ? `?v=${previewVer}` : ''
+                  )
+                )
+              }
+              alt="preview"
+              className="max-h-40 object-contain"
+            />
           </Container>
         ) : null}
       </div>
@@ -79,7 +162,7 @@ const ProfileForm = ({ value, onChange }) => {
     <Container variant="form">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="md:col-span-2">
-          <ImagePicker label="Avatar" value={value.avatar} onChange={(val) => update({ avatar: val })} />
+          <ImagePicker label="Avatar" value={value.avatar} onChange={(val) => update({ avatar: val })} uploadParams={{ folder: 'avatar', name: 'avatar' }} />
         </div>
         <Field label="Name">
           <Input placeholder={value.name} onChange={(val) => update({ name: val })} />
@@ -92,13 +175,22 @@ const ProfileForm = ({ value, onChange }) => {
           <Input placeholder={value.experience} onChange={(val) => update({ experience: val })} />
         </Field>
         <Field label="Status">
-          <div className="flex items-center gap-2">
-            <Toggle checked={!!value.status} onChange={(checked) => update({ status: checked })} />
+          <div className="flex items-center gap-3">
+            <Toggle
+              checked={!!value.status}
+              onChange={(checked) => {
+                // Defer update to avoid setState during Toggle render
+                setTimeout(() => update({ status: checked }), 0);
+              }}
+            />
+            <span className={`text-sm font-medium ${value.status ? 'text-green-600' : 'text-red-600'}`}>
+              {value.status ? 'Online' : 'Offline'}
+            </span>
           </div>
         </Field>
         <div className="md:col-span-2">
           <Field label="Description">
-            <Input placeholder={value.description} onChange={(e) => update({ description: e.target.value })} />
+            <Input placeholder={value.description} onChange={(val) => update({ description: val })} />
           </Field>
         </div>
         <div className="md:col-span-2">
@@ -140,7 +232,7 @@ const ProfileForm = ({ value, onChange }) => {
 };
 
 // Minimal array-of-strings editor (for media)
-const StringListEditor = ({ label, values, onChange, placeholder, enableUpload }) => {
+const StringListEditor = ({ label, values, onChange, placeholder, enableUpload, uploadParams }) => {
   const fileInputRef = useRef(null);
   const remove = (i) => {
     const next = [...(values || [])];
@@ -150,8 +242,13 @@ const StringListEditor = ({ label, values, onChange, placeholder, enableUpload }
   const addFiles = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    const urls = await Promise.all(files.map(fileToDataUrl));
-    onChange([...(values || []), ...urls]);
+    try {
+      const { files: uploaded } = await apiUpload(files, uploadParams || undefined);
+      const urls = (uploaded || []).map(f => f.url).filter(Boolean);
+      onChange([...(values || []), ...urls]);
+    } catch (err) {
+      console.error('Bulk upload failed', err);
+    }
     // reset input so same files can be selected again if needed
     e.target.value = '';
   };
@@ -176,7 +273,7 @@ const StringListEditor = ({ label, values, onChange, placeholder, enableUpload }
                 {(values || []).map((v, i) => (
                   <div key={i} className="relative group">
                     {v ? (
-                      <img src={v} alt={`media-${i}`} className="w-full h-40 md:h-48 object-cover" />
+                      <img src={toServerUrl(v)} alt={`media-${i}`} className="w-full h-40 md:h-48 object-cover" />
                     ) : (
                       <div className="w-full h-40 md:h-48 " />
                     )}
@@ -254,20 +351,46 @@ const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
     const next = projects.map((p, i) => (i === index ? { ...p, ...patch } : p));
     onChange(next);
   };
+  // Build dropdown sources from profile
+  const profileTechs = Array.isArray(profile?.technologies) ? profile.technologies : [];
+  const techNameOptions = profileTechs.map(t => t?.name).filter(Boolean);
+  const techColorByName = Object.fromEntries(profileTechs.filter(t => t && t.name).map(t => [t.name, t.color || '']));
+  const profileCats = Array.isArray(profile?.categories) ? profile.categories : [];
+  const catNameOptions = profileCats.map(c => c?.name).filter(Boolean);
+  const catColorByName = Object.fromEntries(profileCats.filter(c => c && c.name).map(c => [c.name, c.color || '']));
+  // Collaborators dropdown options
+  const collabNameOptions = ['None', ...((Array.isArray(collaborators) ? collaborators : []).map(c => c?.title).filter(Boolean))];
   const addProject = () => {
     const next = [
       ...projects,
-      { id: (projects[projects.length - 1]?.id || 0) + 1, title: 'New Project', description: '', image: '', media: [], technologies: [], category: { name: '', color: '' }, date: '', linksList: [] }
+      { id: (projects[projects.length - 1]?.id || 0) + 1, title: 'New Project', description: '', image: '', media: [], technologies: [], categories: [], category: { name: '', color: '' }, date: '', linksList: [], special: false, collaboration: '' }
     ];
     onChange(next);
     setIndex(next.length - 1);
   };
-  const removeProject = () => {
+  const removeProject = async () => {
     if (!projects.length) return;
+    const item = projects[index];
+    const id = item && item.id != null ? String(item.id) : '';
+    if (!id) return;
+    try {
+      const res = await fetch(`/projects/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const json = await res.json().catch(() => null);
+        const next = (json && Array.isArray(json.projects)) ? json.projects : projects.filter((_, i) => i !== index);
+        onChange(next);
+        setIndex(0);
+        return;
+      }
+    } catch (e) {
+      console.warn('Delete project failed, falling back to local remove:', e);
+    }
     const next = projects.filter((_, i) => i !== index);
     onChange(next);
     setIndex(0);
   };
+  // ...
+
   return (
     <Container variant="form">
       <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -296,150 +419,181 @@ const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
       {projects.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Title"><Input defaultValue={current.title} onChange={(val) => updateCurrent({ title: val })} placeholder="Title" /></Field>
-          {/* Category selector from profile.categories */}
-          <Field label="Category">
+          <Field label="Date">
             {(() => {
-              const categories = (profile?.categories || []).filter(c => c && c.name);
-              const options = ['None', ...categories.map(c => c.name)];
-              const selectedName = typeof current.category === 'object' ? (current.category?.name || '') : (current.category || '');
-              const label = selectedName && options.includes(selectedName) ? selectedName : (selectedName || 'None');
+              const safeDate = typeof current.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(current.date) ? current.date : '';
               return (
-                <>
-                  <Dropdown
-                    header="Select category"
-                    label={label}
-                    options={options}
-                    dark={true}
-                    onSelect={(opt) => {
-                      if (opt === 'None') {
-                        updateCurrent({ category: { name: '', color: '' } });
-                        return;
-                      }
-                      const found = categories.find(c => c.name === opt);
-                      if (found) updateCurrent({ category: { name: found.name, color: found.color || '' } });
-                    }}
-                  />
-                </>
+                <input
+                  type="date"
+                  value={safeDate}
+                  onChange={(e) => updateCurrent({ date: e.target.value })}
+                  className="w-full rounded border border-gray-300 bg-white/90 px-3 py-2 text-gray-900"
+                />
               );
             })()}
           </Field>
-          <Field label="Date">
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                className="px-2 py-1 rounded border border-gray-300 bg-white/90 text-gray-900 text-sm"
-                value={current.date || ''}
-                onChange={(e) => updateCurrent({ date: e.target.value })}
+
+          <Field label="Special">
+            <div className="flex items-center gap-3">
+              <Toggle
+                checked={!!current.special}
+                onChange={(checked) => setTimeout(() => updateCurrent({ special: checked }), 0)}
               />
-              <Button label="Today" variant="green" onClick={() => {
-                const d = new Date();
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                updateCurrent({ date: `${yyyy}-${mm}-${dd}` });
-              }} />
-              {current.date ? (
-                <Button label="Clear" variant="red" onClick={() => updateCurrent({ date: '' })} />
-              ) : null}
+              <span className={`text-sm font-medium ${current.special ? 'text-green-600' : 'text-gray-600'}`}>
+                {current.special ? 'Yes' : 'No'}
+              </span>
             </div>
           </Field>
+
+          <Field label="Collaboration">
+            <Dropdown
+              header="Select collaboration"
+              label={current?.collaboration ? current.collaboration : 'None'}
+              options={collabNameOptions}
+              dark={true}
+              onSelect={(opt) => updateCurrent({ collaboration: opt === 'None' ? '' : opt })}
+            />
+          </Field>
+
           <div className="md:col-span-2">
             <Field label="Description">
-              <Input defaultValue={current.description} placeholder="Description" onChange={(val) => updateCurrent({ description: val })} />
+              <Input defaultValue={current.description} onChange={(val) => updateCurrent({ description: val })} />
             </Field>
           </div>
+
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2">
-              <Toggle checked={!!current.special} onChange={(checked) => updateCurrent({ special: checked })} />
-              <span>Special</span>
-            </div>
+            <ImagePicker
+              label="Image"
+              value={current.image}
+              onChange={(val) => updateCurrent({ image: val })}
+              uploadParams={{ folder: 'project', id: current.id, name: current.title, kind: 'thumbnail' }}
+            />
           </div>
-          <Field label="Collaboration">
-            <div className="space-y-2">
-              {(() => {
-                const options = ['None', ...collaborators.map((c) => c.title)];
-                const label = current.collaboration && options.includes(current.collaboration)
-                  ? current.collaboration
-                  : (current.collaboration ? current.collaboration : 'None');
-                return (
-                  <Dropdown
-                    header="Select collaborator"
-                    label={label}
-                    options={options}
-                    dark={true}
-                    onSelect={(opt) => updateCurrent({ collaboration: opt === 'None' ? '' : opt })}
-                  />
-                );
-              })()}
-            </div>
-          </Field>
+
           <div className="md:col-span-2">
-            <ImagePicker label="Image" value={current.image} onChange={(val) => updateCurrent({ image: val })} />
+            <StringListEditor
+              label="Media"
+              values={current.media || []}
+              onChange={(val) => updateCurrent({ media: val })}
+              placeholder="path/to/media.png"
+              enableUpload={true}
+              uploadParams={{ folder: 'project', id: current.id, name: current.title, kind: 'media' }}
+            />
           </div>
+
           <div className="md:col-span-2">
-            <StringListEditor label="Media" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" enableUpload={true} />
+            <Field label="Technologies (select from Profile)">
+              <div className="space-y-2">
+                {(Array.isArray(current.technologies) ? current.technologies : []).map((t, i) => {
+                  const name = t?.name || '';
+                  const label = name || 'Select technology';
+                  return (
+                    <div key={i} className="grid grid-cols-12 gap-2 items-center">
+                      <div className="col-span-11">
+                        <Dropdown
+                          header="Select technology"
+                          label={label}
+                          options={techNameOptions}
+                          dark={true}
+                          onSelect={(opt) => {
+                            const next = [...(Array.isArray(current.technologies) ? current.technologies : [])];
+                            next[i] = { name: opt, color: techColorByName[opt] || '' };
+                            updateCurrent({ technologies: next });
+                          }}
+                        />
+                      </div>
+                      <div className="col-span-1 flex justify-end">
+                        <Button label="Remove" variant="red" onClick={() => {
+                          const next = [...(Array.isArray(current.technologies) ? current.technologies : [])];
+                          next.splice(i, 1);
+                          updateCurrent({ technologies: next });
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                <Button
+                  label="Add technology"
+                  variant="green"
+                  onClick={() => {
+                    if (!techNameOptions.length) return;
+                    const name = techNameOptions[0];
+                    const color = techColorByName[name] || '';
+                    const next = [...(Array.isArray(current.technologies) ? current.technologies : [])];
+                    next.push({ name, color });
+                    updateCurrent({ technologies: next });
+                  }}
+                />
+              </div>
+            </Field>
           </div>
-          {/* Technologies selector from profile.technologies */}
+
           <div className="md:col-span-2">
-            {(() => {
-              const techs = (profile?.technologies || []).filter(t => t && t.name);
-              const options = techs.length ? techs.map(t => t.name) : [];
-              const selected = current.technologies || [];
-              const addTech = (name) => {
-                const found = techs.find(t => t.name === name);
-                if (!found) return;
-                if (selected.some(s => s.name === found.name)) return;
-                updateCurrent({ technologies: [...selected, { name: found.name, color: found.color || '' }] });
-              };
-              const removeTech = (name) => {
-                updateCurrent({ technologies: selected.filter(s => s.name !== name) });
-              };
-              return (
-                <Container variant="outlined">
-                  <div className="space-y-2">
-                    <Field label="Add technology">
-                      <Dropdown
-                        header="Select technology"
-                        label={options.length ? 'Select...' : 'No technologies in profile'}
-                        options={options}
-                        dark={true}
-                        onSelect={(opt) => addTech(opt)}
-                      />
-                    </Field>
-                    <div className="flex flex-wrap gap-2">
-                      {(selected).map((t, i) => {
-                        const key = String(t?.name || '').toLowerCase().replace(/\s+/g, '').replace(/\./g, '');
-                        // minimal aliasing for common tech names
-                        const alias = {
-                          js: 'javascript',
-                          ts: 'typescript',
-                          'c#': 'cs',
-                          'c++': 'cpp',
-                          python: 'py'
-                        };
-                        const iconKey = alias[key] || key;
-                        const icon = `techno/${iconKey}.webp`;
+            <Field label="Categories (select from Profile)">
+              <div className="space-y-2">
+                {(() => {
+                  const categoriesArr = Array.isArray(current.categories)
+                    ? current.categories
+                    : (current?.category && current.category.name ? [current.category] : []);
+                  return (
+                    <>
+                      {categoriesArr.map((cat, i) => {
+                        const name = cat?.name || '';
+                        const label = name || 'Select category';
                         return (
-                          <Container key={i} className="flex items-center gap-2">
-                            <img src={icon} alt={t?.name || 'tech'} className="h-5 w-5 object-contain" />
-                            <span className="text-sm" style={{ color: t.color || '#111827' }}>{t.name}</span>
-                            <Button label="Remove" variant="red" onClick={() => removeTech(t.name)} />
-                          </Container>
+                          <div key={i} className="grid grid-cols-12 gap-2 items-center">
+                            <div className="col-span-11">
+                              <Dropdown
+                                header="Select category"
+                                label={label}
+                                options={catNameOptions}
+                                dark={true}
+                                onSelect={(opt) => {
+                                  const next = [...categoriesArr];
+                                  next[i] = { name: opt, color: catColorByName[opt] || '' };
+                                  // keep legacy single `category` in sync with first
+                                  updateCurrent({ categories: next, category: next[0] || { name: '', color: '' } });
+                                }}
+                              />
+                            </div>
+                            <div className="col-span-1 flex justify-end">
+                              <Button label="Remove" variant="red" onClick={() => {
+                                const next = [...categoriesArr];
+                                next.splice(i, 1);
+                                updateCurrent({ categories: next, category: next[0] || { name: '', color: '' } });
+                              }} />
+                            </div>
+                          </div>
                         );
                       })}
-                    </div>
-                  </div>
-                </Container>
-              );
-            })()}
+                      <Button
+                        label="Add category"
+                        variant="green"
+                        onClick={() => {
+                          if (!catNameOptions.length) return;
+                          const name = catNameOptions[0];
+                          const color = catColorByName[name] || '';
+                          const arr = Array.isArray(current.categories)
+                            ? [...current.categories]
+                            : (current?.category && current.category.name ? [current.category] : []);
+                          arr.push({ name, color });
+                          updateCurrent({ categories: arr, category: arr[0] || { name: '', color: '' } });
+                        }}
+                      />
+                    </>
+                  );
+                })()}
+              </div>
+            </Field>
           </div>
+
           <div className="md:col-span-2">
             <PairListEditor
-              label="Links List (name + url)"
-              items={current.linksList || []}
+              label="Links (name + url)"
+              items={Array.isArray(current.linksList) ? current.linksList.map(it => (it && it.url ? it : { ...it, url: it?.link || '' })) : []}
               onChange={(val) => updateCurrent({ linksList: val })}
               fields={[
-                { key: 'name', placeholder: 'GitHub / YouTube / Website' },
+                { key: 'name', placeholder: 'e.g. GitHub / Demo' },
                 { key: 'url', placeholder: 'https://example.com' },
               ]}
             />
@@ -466,8 +620,23 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
     onChange(next);
     setIndex(next.length - 1);
   };
-  const removeItem = () => {
+  const removeItem = async () => {
     if (!collaborators.length) return;
+    const item = collaborators[index];
+    const id = item && item.id != null ? String(item.id) : '';
+    if (!id) return;
+    try {
+      const res = await fetch(`/collaborators/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const json = await res.json().catch(() => null);
+        const next = (json && Array.isArray(json.collaborators)) ? json.collaborators : collaborators.filter((_, i) => i !== index);
+        onChange(next);
+        setIndex(0);
+        return;
+      }
+    } catch (e) {
+      console.warn('Delete collaborator failed, falling back to local remove:', e);
+    }
     const next = collaborators.filter((_, i) => i !== index);
     onChange(next);
     setIndex(0);
@@ -517,14 +686,26 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
           
           <div className="md:col-span-2">
             <Field label="Description">
-              <Input placeholder={current.description} onChange={(e) => updateCurrent({ description: e.target.value })} />
+              <Input defaultValue={current.description} onChange={(val) => updateCurrent({ description: val })} />
             </Field>
           </div>
           <div className="md:col-span-2">
-            <ImagePicker label="Image" value={current.image} onChange={(val) => updateCurrent({ image: val })} />
+            <ImagePicker
+              label="Image"
+              value={current.image}
+              onChange={(val) => updateCurrent({ image: val })}
+              uploadParams={{ folder: 'collaboration', id: current.id, name: current.title }}
+            />
           </div>
           <div className="md:col-span-2">
-            <StringListEditor label="Media" values={current.media || []} onChange={(val) => updateCurrent({ media: val })} placeholder="path/to/media.png" enableUpload={true} />
+            <StringListEditor
+              label="Media"
+              values={current.media || []}
+              onChange={(val) => updateCurrent({ media: val })}
+              placeholder="path/to/media.png"
+              enableUpload={true}
+              uploadParams={{ folder: 'collaboration', id: current.id, name: current.title, kind: 'media' }}
+            />
           </div>
           <div className="md:col-span-2">
             <PairListEditor
@@ -548,29 +729,60 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
 export default function AdminPage() {
   const [section, setSection] = useState('projects');
 
-  const [projects, setProjects] = useState(initialProjects);
-  const [collaborators, setCollaborators] = useState(initialCollaborators);
-  const [profile, setProfile] = useState(initialProfile);
+  const [projects, setProjects] = useState([]);
+  const [collaborators, setCollaborators] = useState([]);
+  const [profile, setProfile] = useState({});
+  const [sectionJsonDraft, setSectionJsonDraft] = useState('');
+  const [sectionJsonError, setSectionJsonError] = useState('');
 
-  // Load from localStorage
+  // Load latest from backend
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(StorageKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.projects) setProjects(parsed.projects);
-        if (parsed.collaborators) setCollaborators(parsed.collaborators);
-        if (parsed.profile) setProfile(parsed.profile);
+    (async () => {
+      try {
+        const [p, c, pr] = await Promise.all([
+          apiGet('/projects').catch(() => null),
+          apiGet('/collaborators').catch(() => null),
+          apiGet('/profile').catch(() => null),
+        ]);
+        if (Array.isArray(p)) setProjects(p);
+        if (Array.isArray(c)) setCollaborators(c);
+        if (pr && typeof pr === 'object') setProfile(pr);
+      } catch (e) {
+        // keep local fallbacks
+        console.warn('Failed to fetch initial data from backend', e);
       }
-    } catch {}
+    })();
   }, []);
 
-  useEffect(() => {
-    const payload = { projects, collaborators, profile };
-    try { localStorage.setItem(StorageKey, JSON.stringify(payload)); } catch {}
-  }, [projects, collaborators, profile]);
+  // Remove localStorage persistence: show only server data
 
   const dataJsText = useMemo(() => generateDataJs(projects, collaborators, profile), [projects, collaborators, profile]);
+
+  // Keep JSON draft in sync with current section's data
+  useEffect(() => {
+    const pick = section === 'projects' ? projects : (section === 'collaborators' ? collaborators : profile);
+    try {
+      setSectionJsonDraft(JSON.stringify(pick, null, 2));
+      setSectionJsonError('');
+    } catch (e) {
+      setSectionJsonDraft('');
+      setSectionJsonError('');
+    }
+  }, [section, projects, collaborators, profile]);
+
+  const onEditSectionJson = (e) => {
+    const text = e.target.value;
+    setSectionJsonDraft(text);
+    try {
+      const parsed = JSON.parse(text);
+      setSectionJsonError('');
+      if (section === 'projects') setProjects(Array.isArray(parsed) ? parsed : []);
+      else if (section === 'collaborators') setCollaborators(Array.isArray(parsed) ? parsed : []);
+      else if (section === 'profile') setProfile(parsed && typeof parsed === 'object' ? parsed : {});
+    } catch (err) {
+      setSectionJsonError('JSON invalid');
+    }
+  };
 
   const downloadDataJs = () => {
     const blob = new Blob([dataJsText], { type: 'text/javascript;charset=utf-8' });
@@ -582,11 +794,28 @@ export default function AdminPage() {
     URL.revokeObjectURL(url);
   };
 
-  const resetToRepo = () => {
-    setProjects(initialProjects);
-    setCollaborators(initialCollaborators);
-    setProfile(initialProfile);
-    try { localStorage.removeItem(StorageKey); } catch {}
+  const saveCurrent = async () => {
+    try {
+      if (section === 'projects') {
+        const resp = await apiPut('/projects', projects);
+        if (resp && Array.isArray(resp.projects)) {
+          setProjects(resp.projects);
+        }
+      }
+      if (section === 'collaborators') {
+        const resp = await apiPut('/collaborators', collaborators);
+        if (resp && Array.isArray(resp.collaborators)) {
+          setCollaborators(resp.collaborators);
+        }
+      }
+      if (section === 'profile') {
+        await apiPut('/profile', profile);
+      }
+      alert('Saved successfully');
+    } catch (e) {
+      console.error('Save failed', e);
+      alert('Save failed');
+    }
   };
 
   return (
@@ -594,8 +823,8 @@ export default function AdminPage() {
       <Container>
           <h1 className="minecraft-ten text-4xl pb-6">Admin Editor</h1>
           <div className="flex items-center gap-2">
-            <Button label="Export data.jsx" variant="green" onClick={downloadDataJs} />
-            <Button label="Reset to repo" variant="purple" onClick={resetToRepo} />
+            <Button label="Export data.jsx" onClick={downloadDataJs} />
+            <Button label={`Save ${section}`} variant="green" onClick={saveCurrent} />
           </div>
       </Container>
 
@@ -633,7 +862,12 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2">
                 {section === 'projects' && (
-                  <ProjectsForm projects={projects} onChange={setProjects} collaborators={collaborators} profile={profile} />
+                  <ProjectsForm
+                    projects={projects}
+                    onChange={setProjects}
+                    collaborators={collaborators}
+                    profile={profile}
+                  />
                 )}
                 {section === 'collaborators' && (
                   <CollaboratorsForm collaborators={collaborators} onChange={setCollaborators} />
@@ -643,9 +877,17 @@ export default function AdminPage() {
                 )}
               </div>
               <Container className="w-[600px]">
-                    <h3 className="text-lg font-semibold">Generated data.jsx (read-only)</h3>
-                    <textarea className="h-screen p-3 font-mono text-xs bg-gray-800 text-white" value={dataJsText} readOnly spellCheck={false} />
-                </Container>
+                <h3 className="text-lg font-semibold">{section.charAt(0).toUpperCase() + section.slice(1)} JSON</h3>
+                <textarea
+                  className={`h-screen p-3 font-mono text-xs bg-gray-800 text-white w-full rounded outline-none border ${sectionJsonError ? 'border-red-500' : 'border-transparent'}`}
+                  value={sectionJsonDraft}
+                  onChange={onEditSectionJson}
+                  spellCheck={false}
+                />
+                {sectionJsonError ? (
+                  <div className="text-red-500 text-xs mt-1">{sectionJsonError}</div>
+                ) : null}
+              </Container>
             </div>
           </main>
         </div>

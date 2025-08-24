@@ -1,6 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { projectsData, collaborators as collaboratorsData } from '../server/data';
 import { Container, Button } from 'mc-ui-comatv';
 import CollaboratorCard from './CollaboratorCard';
 
@@ -9,7 +8,31 @@ const ProjectDetail = () => {
   const { id } = useParams();
   const projectId = Number(id);
 
-  const project = useMemo(() => projectsData.find(p => p.id === projectId), [projectId]);
+  const [projectsData, setProjectsData] = useState([]);
+  const [collaboratorsData, setCollaboratorsData] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const [pRes, cRes] = await Promise.all([fetch('/projects'), fetch('/collaborators')]);
+        const [pJson, cJson] = await Promise.all([
+          pRes.ok ? pRes.json() : [],
+          cRes.ok ? cRes.json() : []
+        ]);
+        if (!mounted) return;
+        setProjectsData(Array.isArray(pJson) ? pJson : []);
+        setCollaboratorsData(Array.isArray(cJson) ? cJson : []);
+      } catch {
+        if (!mounted) return;
+        setProjectsData([]);
+        setCollaboratorsData([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const project = useMemo(() => (projectsData || []).find(p => p.id === projectId), [projectId, projectsData]);
   // Hooks must not be after an early return
   const [mediaIndex, setMediaIndex] = useState(0);
 
@@ -24,7 +47,13 @@ const ProjectDetail = () => {
     );
   }
 
-  const asPublic = (p) => (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http') ? `/${p}` : p);
+  const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+  const asPublic = (p) => {
+    if (!p) return p;
+    if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
+    if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
+    return p;
+  };
   const techIcons = (project.technologies || []).map((tech) => ({
     name: tech.name,
     src: asPublic(`techno/${tech.name.toLowerCase().replace('.', '').replace(' ', '')}.webp`),
@@ -166,7 +195,7 @@ const ProjectDetail = () => {
         </Container>
       </div>
       {project.collaboration && (() => {
-        const collaborator = collaboratorsData.find(c => c.title === project.collaboration);
+        const collaborator = (collaboratorsData || []).find(c => c.title === project.collaboration);
         if (!collaborator) return null;
         return (
           <div className="w-full flex flex-col items-center mt-8 gap-3 px-4 pb-10">

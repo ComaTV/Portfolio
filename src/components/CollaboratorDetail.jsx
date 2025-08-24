@@ -1,7 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { collaborators, projectsData } from '../server/data';
 import { Container, Button, ImageCard, Scrollbar } from 'mc-ui-comatv';
+
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+const asPublic = (p) => {
+  if (!p) return p;
+  if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
+  if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
+  return p;
+};
 
 const CollaboratorDetail = () => {
   const navigate = useNavigate();
@@ -9,8 +16,31 @@ const CollaboratorDetail = () => {
   const collabId = Number(id);
 
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [collaborators, setCollaborators] = useState([]);
+  const [projectsData, setProjectsData] = useState([]);
 
-  const collaborator = useMemo(() => collaborators.find(c => c.id === collabId), [collabId]);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const [cRes, pRes] = await Promise.all([fetch('/collaborators'), fetch('/projects')]);
+        const [cJson, pJson] = await Promise.all([
+          cRes.ok ? cRes.json() : [],
+          pRes.ok ? pRes.json() : []
+        ]);
+        if (!mounted) return;
+        setCollaborators(Array.isArray(cJson) ? cJson : []);
+        setProjectsData(Array.isArray(pJson) ? pJson : []);
+      } catch {
+        if (!mounted) return;
+        setCollaborators([]);
+        setProjectsData([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const collaborator = useMemo(() => (collaborators || []).find(c => c.id === collabId), [collabId, collaborators]);
 
   if (!collaborator) {
     return (
@@ -27,10 +57,9 @@ const CollaboratorDetail = () => {
   const urlEntries = socialArr.filter((s) => typeof s?.link === 'string' && /^https?:\/\//i.test(s.link));
   const textEntries = socialArr.filter((s) => typeof s?.link === 'string' && !/^https?:\/\//i.test(s.link));
 
-  const projects = projectsData.filter(p => p.collaboration === collaborator.title);
+  const projects = (projectsData || []).filter(p => p.collaboration === collaborator.title);
 
   const openUrl = (url) => window.open(url, '_blank', 'noreferrer');
-  const asPublic = (p) => (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http') ? `/${p}` : p);
 
   // Build media array similar to ProjectDetail (fallback to single image)
   const media = Array.isArray(collaborator.media) && collaborator.media.length > 0

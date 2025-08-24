@@ -1,9 +1,34 @@
 import { Scrollbar, ImageCard,Container } from 'mc-ui-comatv';
-import { collaborators } from '../server/data';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+const asPublic = (p) => {
+  if (!p) return p;
+  if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
+  if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
+  return p;
+};
 
 const CollaboratorsSection = () => {
   const navigate = useNavigate();
+  const [collaborators, setCollaborators] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch('/collaborators');
+        const json = res.ok ? await res.json() : [];
+        if (!mounted) return;
+        setCollaborators(Array.isArray(json) ? json : []);
+      } catch {
+        if (!mounted) return;
+        setCollaborators([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
   return (
     <div className="min-h-screen flex flex-col">
       <div className="w-full flex justify-center mt-40">
@@ -38,7 +63,7 @@ const CollaboratorsSection = () => {
             return (
               <ImageCard
                 key={c.id}
-                imageSrc={c.image}
+                imageSrc={asPublic(c.image)}
                 label={c.title}
                 description={c.description}
                 iconImages={iconImages}

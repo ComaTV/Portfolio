@@ -1,6 +1,14 @@
 import { Scrollbar, ImageCard,Container } from 'mc-ui-comatv';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+const asPublic = (p) => {
+  if (!p) return p;
+  if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
+  if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
+  return p;
+};
+
 const ProjectsView = ({ projects }) => {
   const navigate = useNavigate();
   return (
@@ -29,7 +37,7 @@ const ProjectsView = ({ projects }) => {
           return (
             <ImageCard
               key={project.id}
-              imageSrc={project.image}
+              imageSrc={asPublic(project.image)}
               label={project.title}
               description={project.description}
               iconImages={iconImages}

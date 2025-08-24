@@ -21,7 +21,9 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "npm --prefix server run start",
+    "server:dev": "npm --prefix server run dev"
   },
   "eslintConfig": {
     "extends": [
