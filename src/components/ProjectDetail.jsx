@@ -17,7 +17,7 @@ const ProjectDetail = () => {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <div className="text-center">
-          <p className="text-xl mb-4">Project not found.</p>
+          <p className="text-xl mb-4">Proiectul nu a fost găsit.</p>
           <Button label="Back" variant="green" width={140} height={44} onClick={() => navigate('/')} />
         </div>
       </div>
