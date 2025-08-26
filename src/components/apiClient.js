@@ -115,9 +115,13 @@ export const Api = {
   deleteCollaboratorMedia: (id, pos) => apiDelete(`/collaborators/${encodeURIComponent(String(id))}/media/${encodeURIComponent(String(pos))}`),
   validateAdmin: async () => {
     const token = getAdminToken();
-    const url = new URL(`${API_BASE}/admin/validate`);
-    if (token) url.searchParams.set('token', token);
-    const res = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
+    // Build URL robustly for both absolute and relative API_BASE
+    let url = `${API_BASE}/admin/validate`;
+    if (token) {
+      const sep = url.includes('?') ? '&' : '?';
+      url = `${url}${sep}token=${encodeURIComponent(token)}`;
+    }
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!res.ok) throw new Error('Admin token invalid');
     return res.json();
   },
