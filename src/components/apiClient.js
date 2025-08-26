@@ -1,4 +1,4 @@
-const API_BASE = process.env.REACT_APP_API_BASE;
+const API_BASE = (process.env.REACT_APP_API_BASE || '/api').replace(/\/$/, '');
 
 const ADMIN_TOKEN_KEY = 'portfolio_admin_token';
 function readTokenFromUrl() {
