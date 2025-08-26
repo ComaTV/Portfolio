@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Button, Scrollbar, Container, Input, Toggle, Dropdown } from 'mc-ui-comatv';
+import { Api, toServerUrl } from '../components/apiClient';
 
 function stringifyJsExport(name, value) {
   // Pretty-print with 2 spaces but keep closer to original style
@@ -7,39 +8,6 @@ function stringifyJsExport(name, value) {
     .replace(/"(\w+)":/g, '"$1":')
     .replace(/\n/g, '\n');
   return `export const ${name} = ${body};\n`;
-}
-
-// Backend base (used for image preview)
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
-const toServerUrl = (u) => {
-  if (!u) return '';
-  if (u.startsWith('http://') || u.startsWith('https://')) return u;
-  if (u.startsWith('/uploads/')) return `${API_BASE}${u}`;
-  return u;
-};
-
-// --- Origin allowlist from backend (/health) ---
-let __healthCache = null;
-async function loadHealth() {
-  if (__healthCache) return __healthCache;
-  try {
-    const res = await fetch('/health', { headers: { 'Accept': 'application/json' } });
-    if (!res.ok) throw new Error('health failed');
-    const json = await res.json();
-    __healthCache = json || { status: 'ok', allowedOrigins: [] };
-  } catch {
-    __healthCache = { status: 'ok', allowedOrigins: [] };
-  }
-  return __healthCache;
-}
-
-async function ensureAllowedOrigin() {
-  const { allowedOrigins = [] } = await loadHealth();
-  const here = window.location.origin.replace(/\/$/, '');
-  const list = (Array.isArray(allowedOrigins) ? allowedOrigins : []).map((s) => String(s || '').replace(/\/$/, '')).filter(Boolean);
-  if (list.length && !list.includes(here)) {
-    throw new Error('Forbidden origin');
-  }
 }
 
 function generateDataJs(projects, collaborators, profile) {
@@ -59,39 +27,7 @@ const Field = ({ label, children }) => (
 
 // (Removed) CategoryColorsForm – colors are now stored per project under category
 
-// --- API helpers ---
-async function apiGet(pathname) {
-  await ensureAllowedOrigin();
-  const res = await fetch(pathname, { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) throw new Error(`GET ${pathname} failed`);
-  return res.json();
-}
-
-async function apiPut(pathname, body) {
-  await ensureAllowedOrigin();
-  const res = await fetch(pathname, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error(`PUT ${pathname} failed`);
-  return res.json();
-}
-
-async function apiUpload(files, params = {}) {
-  await ensureAllowedOrigin();
-  const fd = new FormData();
-  (files || []).forEach(f => fd.append('files', f));
-  const qs = new URLSearchParams();
-  Object.entries(params || {}).forEach(([k, v]) => {
-    if (v === undefined || v === null) return;
-    qs.set(k, String(v));
-  });
-  const url = qs.toString() ? `/upload?${qs.toString()}` : '/upload';
-  const res = await fetch(url, { method: 'POST', body: fd });
-  if (!res.ok) throw new Error('Upload failed');
-  return res.json();
-}
+// API helpers moved to Api (from '../components/apiClient')
 
 // Image picker: allow path or upload with preview
 const ImagePicker = ({ label, value, onChange, uploadParams }) => {
@@ -105,7 +41,7 @@ const ImagePicker = ({ label, value, onChange, uploadParams }) => {
     const objUrl = URL.createObjectURL(file);
     setLocalPreview(objUrl);
     try {
-      const { files: uploaded } = await apiUpload([file], uploadParams);
+      const { files: uploaded } = await Api.upload([file], uploadParams);
       const url = uploaded?.[0]?.url || '';
       if (url) {
         onChange(url);
@@ -243,7 +179,7 @@ const StringListEditor = ({ label, values, onChange, placeholder, enableUpload, 
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     try {
-      const { files: uploaded } = await apiUpload(files, uploadParams || undefined);
+      const { files: uploaded } = await Api.upload(files, uploadParams || undefined);
       const urls = (uploaded || []).map(f => f.url).filter(Boolean);
       onChange([...(values || []), ...urls]);
     } catch (err) {
@@ -374,14 +310,11 @@ const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
     const id = item && item.id != null ? String(item.id) : '';
     if (!id) return;
     try {
-      const res = await fetch(`/projects/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
-      if (res.ok) {
-        const json = await res.json().catch(() => null);
-        const next = (json && Array.isArray(json.projects)) ? json.projects : projects.filter((_, i) => i !== index);
-        onChange(next);
-        setIndex(0);
-        return;
-      }
+      const json = await Api.deleteProject(id).catch(() => null);
+      const next = (json && Array.isArray(json.projects)) ? json.projects : projects.filter((_, i) => i !== index);
+      onChange(next);
+      setIndex(0);
+      return;
     } catch (e) {
       console.warn('Delete project failed, falling back to local remove:', e);
     }
@@ -626,14 +559,11 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
     const id = item && item.id != null ? String(item.id) : '';
     if (!id) return;
     try {
-      const res = await fetch(`/collaborators/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
-      if (res.ok) {
-        const json = await res.json().catch(() => null);
-        const next = (json && Array.isArray(json.collaborators)) ? json.collaborators : collaborators.filter((_, i) => i !== index);
-        onChange(next);
-        setIndex(0);
-        return;
-      }
+      const json = await Api.deleteCollaborator(id).catch(() => null);
+      const next = (json && Array.isArray(json.collaborators)) ? json.collaborators : collaborators.filter((_, i) => i !== index);
+      onChange(next);
+      setIndex(0);
+      return;
     } catch (e) {
       console.warn('Delete collaborator failed, falling back to local remove:', e);
     }
@@ -740,9 +670,9 @@ export default function AdminPage() {
     (async () => {
       try {
         const [p, c, pr] = await Promise.all([
-          apiGet('/projects').catch(() => null),
-          apiGet('/collaborators').catch(() => null),
-          apiGet('/profile').catch(() => null),
+          Api.getProjects().catch(() => null),
+          Api.getCollaborators().catch(() => null),
+          Api.getProfile().catch(() => null),
         ]);
         if (Array.isArray(p)) setProjects(p);
         if (Array.isArray(c)) setCollaborators(c);
@@ -797,19 +727,19 @@ export default function AdminPage() {
   const saveCurrent = async () => {
     try {
       if (section === 'projects') {
-        const resp = await apiPut('/projects', projects);
+        const resp = await Api.saveProjects(projects);
         if (resp && Array.isArray(resp.projects)) {
           setProjects(resp.projects);
         }
       }
       if (section === 'collaborators') {
-        const resp = await apiPut('/collaborators', collaborators);
+        const resp = await Api.saveCollaborators(collaborators);
         if (resp && Array.isArray(resp.collaborators)) {
           setCollaborators(resp.collaborators);
         }
       }
       if (section === 'profile') {
-        await apiPut('/profile', profile);
+        await Api.saveProfile(profile);
       }
       alert('Saved successfully');
     } catch (e) {

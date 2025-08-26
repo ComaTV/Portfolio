@@ -1,14 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Button, ImageCard, Scrollbar } from 'mc-ui-comatv';
-
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
-const asPublic = (p) => {
-  if (!p) return p;
-  if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
-  if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
-  return p;
-};
+import { Api, toPublicUrl } from './apiClient';
 
 const CollaboratorDetail = () => {
   const navigate = useNavigate();
@@ -23,10 +16,9 @@ const CollaboratorDetail = () => {
     let mounted = true;
     (async () => {
       try {
-        const [cRes, pRes] = await Promise.all([fetch('/collaborators'), fetch('/projects')]);
         const [cJson, pJson] = await Promise.all([
-          cRes.ok ? cRes.json() : [],
-          pRes.ok ? pRes.json() : []
+          Api.getCollaborators().catch(() => []),
+          Api.getProjects().catch(() => [])
         ]);
         if (!mounted) return;
         setCollaborators(Array.isArray(cJson) ? cJson : []);
@@ -98,7 +90,7 @@ const CollaboratorDetail = () => {
                   />
                   <div className="relative h-[90%] w-[80%] overflow-hidden border-2 border-white">
                     <img
-                      src={asPublic(media[mediaIndex])}
+                      src={toPublicUrl(media[mediaIndex])}
                       alt={`${collaborator.title} - media ${mediaIndex + 1}`}
                       className="absolute inset-0 h-full w-full object-cover"
                     />
@@ -181,7 +173,7 @@ const CollaboratorDetail = () => {
                         {projects.map((p) => (
                           <ImageCard
                             key={p.id}
-                            imageSrc={asPublic(p.image)}
+                            imageSrc={toPublicUrl(p.image)}
                             label={p.title}
                             description={p.description}
                             onClick={() => navigate(`/projects/${p.id}`)}

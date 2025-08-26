@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Container } from 'mc-ui-comatv';
 import * as skinview3d from 'skinview3d';
+import { Api, toPublicUrl } from '../apiClient';
 
 const ProfileInfo = () => {
   const skinViewerRef = useRef(null);
@@ -12,13 +13,9 @@ const ProfileInfo = () => {
     let mounted = true;
     (async () => {
       try {
-        const [pRes, profRes] = await Promise.all([
-          fetch('/projects'),
-          fetch('/profile')
-        ]);
         const [pJson, profJson] = await Promise.all([
-          pRes.ok ? pRes.json() : [],
-          profRes.ok ? profRes.json() : {}
+          Api.getProjects().catch(() => []),
+          Api.getProfile().catch(() => ({}))
         ]);
         if (!mounted) return;
         setProjectsData(Array.isArray(pJson) ? pJson : []);
@@ -37,12 +34,10 @@ const ProfileInfo = () => {
     const key = String(name || '').toLowerCase().replace(/\s+/g, '').replace(/\./g, '');
     return `techno/${key}.webp`;
   };
-  const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+  // Use shared URL helper for images, but avoid empty-string src which triggers browser warnings
   const asPublic = (p) => {
-    if (!p) return p;
-    if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
-    if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
-    return p;
+    const u = toPublicUrl(p);
+    return u || null; // pass null instead of '' to img src
   };
 
   useEffect(() => {

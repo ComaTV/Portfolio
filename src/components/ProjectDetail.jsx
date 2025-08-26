@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Button } from 'mc-ui-comatv';
 import CollaboratorCard from './CollaboratorCard';
+import { Api, toPublicUrl } from './apiClient';
 
 const ProjectDetail = () => {
   const navigate = useNavigate();
@@ -15,10 +16,9 @@ const ProjectDetail = () => {
     let mounted = true;
     (async () => {
       try {
-        const [pRes, cRes] = await Promise.all([fetch('/projects'), fetch('/collaborators')]);
         const [pJson, cJson] = await Promise.all([
-          pRes.ok ? pRes.json() : [],
-          cRes.ok ? cRes.json() : []
+          Api.getProjects().catch(() => []),
+          Api.getCollaborators().catch(() => [])
         ]);
         if (!mounted) return;
         setProjectsData(Array.isArray(pJson) ? pJson : []);
@@ -47,13 +47,7 @@ const ProjectDetail = () => {
     );
   }
 
-  const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
-  const asPublic = (p) => {
-    if (!p) return p;
-    if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
-    if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
-    return p;
-  };
+  const asPublic = (p) => toPublicUrl(p);
   const techIcons = (project.technologies || []).map((tech) => ({
     name: tech.name,
     src: asPublic(`techno/${tech.name.toLowerCase().replace('.', '').replace(' ', '')}.webp`),

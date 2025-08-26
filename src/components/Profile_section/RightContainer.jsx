@@ -2,14 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Container, Button } from 'mc-ui-comatv';
 import { useNavigate } from 'react-router-dom';
-
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
-const asPublic = (p) => {
-  if (!p) return p;
-  if (typeof p === 'string' && p.startsWith('/uploads/')) return `${API_BASE}${p}`;
-  if (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http')) return `/${p}`;
-  return p;
-};
+import { Api, toPublicUrl } from '../apiClient';
 
 const CustomImageCard = ({ project }) => {
   const navigate = useNavigate();
@@ -28,7 +21,7 @@ const CustomImageCard = ({ project }) => {
       onClick={() => navigate(`/projects/${project.id}`)}
     >
       <img
-        src={asPublic(project.image)}
+        src={toPublicUrl(project.image)}
         alt={project.title}
         className="absolute inset-0 h-full w-full object-cover"
       />
@@ -102,8 +95,7 @@ const RightContainer = () => {
     let mounted = true;
     (async () => {
       try {
-        const res = await fetch('/projects');
-        const json = res.ok ? await res.json() : [];
+        const json = await Api.getProjects().catch(() => []);
         if (!mounted) return;
         setProjectsData(Array.isArray(json) ? json : []);
       } catch {

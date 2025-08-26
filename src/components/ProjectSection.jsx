@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Api } from './apiClient';
 import TechTogglePanel from './Project_section/TechTogglePanel';
 import CategoryTogglePanel from './Project_section/CategoryTogglePanel';
 import ProjectsView from './Project_section/ProjectsView';
@@ -28,8 +29,7 @@ const ProjectSection = () => {
     let mounted = true;
     (async () => {
       try {
-        const res = await fetch('/projects');
-        const json = res.ok ? await res.json() : [];
+        const json = await Api.getProjects().catch(() => []);
         if (!mounted) return;
         setProjectsData(Array.isArray(json) ? json : []);
       } catch {
