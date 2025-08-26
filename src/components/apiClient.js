@@ -1,9 +1,25 @@
-// Centralized API client for backend requests
-// Uses REACT_APP_API_BASE or defaults to http://localhost:5000
+const API_BASE = process.env.REACT_APP_API_BASE;
 
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+const ADMIN_TOKEN_KEY = 'portfolio_admin_token';
+function readTokenFromUrl() {
+  try {
+    const u = new URL(window.location.href);
+    const t = u.searchParams.get('token') || u.searchParams.get('admin_token') || '';
+    if (t) {
+      sessionStorage.setItem(ADMIN_TOKEN_KEY, t);
+      u.searchParams.delete('token');
+      u.searchParams.delete('admin_token');
+      window.history.replaceState({}, '', u.toString());
+    }
+    return t;
+  } catch {
+    return '';
+  }
+}
+function getAdminToken() {
+  return sessionStorage.getItem(ADMIN_TOKEN_KEY) || readTokenFromUrl() || '';
+}
 
-// Internal cache for /health response
 let __healthCache = null;
 
 export async function loadHealth() {
@@ -39,9 +55,10 @@ export async function apiGet(pathname) {
 
 export async function apiPut(pathname, body) {
   await ensureAllowedOrigin();
+  const token = getAdminToken();
   const res = await fetch(`${API_BASE}${pathname}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Admin-Token': token },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`PUT ${pathname} failed`);
@@ -50,9 +67,10 @@ export async function apiPut(pathname, body) {
 
 export async function apiDelete(pathname) {
   await ensureAllowedOrigin();
+  const token = getAdminToken();
   const res = await fetch(`${API_BASE}${pathname}`, {
     method: 'DELETE',
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', 'X-Admin-Token': token },
   });
   if (!res.ok) throw new Error(`DELETE ${pathname} failed`);
   return res.json().catch(() => ({}));
@@ -60,6 +78,7 @@ export async function apiDelete(pathname) {
 
 export async function apiUpload(files, params = {}) {
   await ensureAllowedOrigin();
+  const token = getAdminToken();
   const fd = new FormData();
   (files || []).forEach((f) => fd.append('files', f));
   const qs = new URLSearchParams();
@@ -68,7 +87,7 @@ export async function apiUpload(files, params = {}) {
     qs.set(k, String(v));
   });
   const url = `${API_BASE}/upload${qs.toString() ? `?${qs.toString()}` : ''}`;
-  const res = await fetch(url, { method: 'POST', body: fd });
+  const res = await fetch(url, { method: 'POST', body: fd, headers: { 'X-Admin-Token': token } });
   if (!res.ok) throw new Error('Upload failed');
   return res.json();
 }
@@ -94,6 +113,14 @@ export const Api = {
   deleteProject: (id) => apiDelete(`/projects/${encodeURIComponent(String(id))}`),
   deleteCollaborator: (id) => apiDelete(`/collaborators/${encodeURIComponent(String(id))}`),
   deleteCollaboratorMedia: (id, pos) => apiDelete(`/collaborators/${encodeURIComponent(String(id))}/media/${encodeURIComponent(String(pos))}`),
+  validateAdmin: async () => {
+    const token = getAdminToken();
+    const url = new URL(`${API_BASE}/admin/validate`);
+    if (token) url.searchParams.set('token', token);
+    const res = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error('Admin token invalid');
+    return res.json();
+  },
 };
 
 export function toServerUrl(u) {

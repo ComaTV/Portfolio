@@ -17,7 +17,6 @@ function generateDataJs(projects, collaborators, profile) {
   return `${p}\n\n${c}\n\n${pr}`;
 }
 
-// Simple labeled field wrapper for Input
 const Field = ({ label, children }) => (
   <div className="mb-3">
     <div className="text-sm font-medium mb-1">{label}</div>
@@ -25,11 +24,6 @@ const Field = ({ label, children }) => (
   </div>
 );
 
-// (Removed) CategoryColorsForm – colors are now stored per project under category
-
-// API helpers moved to Api (from '../components/apiClient')
-
-// Image picker: allow path or upload with preview
 const ImagePicker = ({ label, value, onChange, uploadParams }) => {
   const fileRef = useRef(null);
   const [localPreview, setLocalPreview] = useState('');
@@ -658,6 +652,8 @@ const CollaboratorsForm = ({ collaborators, onChange }) => {
 
 export default function AdminPage() {
   const [section, setSection] = useState('projects');
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authOk, setAuthOk] = useState(false);
 
   const [projects, setProjects] = useState([]);
   const [collaborators, setCollaborators] = useState([]);
@@ -665,10 +661,12 @@ export default function AdminPage() {
   const [sectionJsonDraft, setSectionJsonDraft] = useState('');
   const [sectionJsonError, setSectionJsonError] = useState('');
 
-  // Load latest from backend
+  // Validate admin and then load data
   useEffect(() => {
     (async () => {
       try {
+        await Api.validateAdmin();
+        setAuthOk(true);
         const [p, c, pr] = await Promise.all([
           Api.getProjects().catch(() => null),
           Api.getCollaborators().catch(() => null),
@@ -678,8 +676,10 @@ export default function AdminPage() {
         if (Array.isArray(c)) setCollaborators(c);
         if (pr && typeof pr === 'object') setProfile(pr);
       } catch (e) {
-        // keep local fallbacks
-        console.warn('Failed to fetch initial data from backend', e);
+        console.warn('Admin validation failed', e);
+        setAuthOk(false);
+      } finally {
+        setAuthChecked(true);
       }
     })();
   }, []);
@@ -747,6 +747,27 @@ export default function AdminPage() {
       alert('Save failed');
     }
   };
+
+  if (!authChecked) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <Container>
+          <div>Checking admin access...</div>
+        </Container>
+      </div>
+    );
+  }
+
+  if (!authOk) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <Container>
+          <h1 className="text-2xl minecraft-ten mb-2">Access denied</h1>
+          <p className="text-sm ">U are not allowed to access this page</p>
+        </Container>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full text-gray-900">
