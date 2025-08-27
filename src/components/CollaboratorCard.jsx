@@ -1,18 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { toPublicUrl } from './apiClient';
 
 const CollaboratorCard = ({ collaborator, href, onClick }) => {
   if (!collaborator) return null;
   const { title, description, image, social } = collaborator;
-
-  const asPublic = (p) => (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http') ? `/${p}` : p);
-
-  console.log(asPublic(image));
   const clickable = Boolean(href || onClick);
   const content = (
       <div className={`relative w-[90%] max-w-md mx-auto h-48 border-white border-2 ${clickable ? 'cursor-pointer' : ''}`}>
         <img
-          src={asPublic(image)}
+          src={toPublicUrl(image)}
           alt={title}
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -26,7 +23,7 @@ const CollaboratorCard = ({ collaborator, href, onClick }) => {
                 const key = String(s?.name || '').toLowerCase().replace(/\s+/g, '').replace(/\./g, '');
                 const icon = key ? `techno/${key}.webp` : 'techno/internet.webp';
                 const isUrl = typeof s?.link === 'string' && /^https?:\/\//i.test(s.link);
-                const img = <img src={asPublic(icon)} alt={s?.name || 'link'} className="h-6 w-6 object-contain" title={s?.name} />;
+                const img = <img src={toPublicUrl(icon)} alt={s?.name || 'link'} className="h-6 w-6 object-contain" title={s?.name} />;
                 return isUrl ? (
                   <a key={`${key}-${i}`} href={s.link} target="_blank" rel="noreferrer" aria-label={s?.name || 'link'}>
                     {img}
