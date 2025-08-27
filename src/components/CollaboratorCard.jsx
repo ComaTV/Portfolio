@@ -7,6 +7,7 @@ const CollaboratorCard = ({ collaborator, href, onClick }) => {
 
   const asPublic = (p) => (typeof p === 'string' && !p.startsWith('/') && !p.startsWith('http') ? `/${p}` : p);
 
+  console.log(asPublic(image));
   const clickable = Boolean(href || onClick);
   const content = (
       <div className={`relative w-[90%] max-w-md mx-auto h-48 border-white border-2 ${clickable ? 'cursor-pointer' : ''}`}>
