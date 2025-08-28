@@ -88,7 +88,12 @@ export async function apiUpload(files, params = {}) {
   });
   const url = `${API_BASE}/upload${qs.toString() ? `?${qs.toString()}` : ''}`;
   const res = await fetch(url, { method: 'POST', body: fd, headers: { 'X-Admin-Token': token } });
-  if (!res.ok) throw new Error('Upload failed');
+  if (!res.ok) {
+    let msg = '';
+    try { msg = await res.text(); } catch {}
+    const suffix = msg ? ` - ${msg.slice(0, 300)}` : '';
+    throw new Error(`Upload failed: ${res.status} ${res.statusText}${suffix}`);
+  }
   return res.json();
 }
 
