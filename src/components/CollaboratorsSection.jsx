@@ -57,7 +57,7 @@ const CollaboratorsSection = () => {
                 key={c.id}
                 imageSrc={toPublicUrl(c.image)}
                 label={c.title}
-                description={c.description}
+                description={c.description.length > 100 ? `${c.description.substring(0, 100)}...` : c.description}
                 iconImages={iconImages}
                 onClick={() => navigate(`/collaborators/${c.id}`)}
               />

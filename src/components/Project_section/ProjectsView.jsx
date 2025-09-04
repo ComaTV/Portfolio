@@ -39,7 +39,7 @@ const ProjectsView = ({ projects }) => {
               key={project.id}
               imageSrc={asPublic(project.image)}
               label={project.title}
-              description={project.description}
+              description={project.description.length > 100 ? `${project.description.substring(0, 100)}...` : project.description}
               iconImages={iconImages}
               onClick={() => navigate(`/projects/${project.id}`)}
             />

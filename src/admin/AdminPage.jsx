@@ -3,7 +3,6 @@ import { Button, Scrollbar, Container, Input, Toggle, Dropdown } from 'mc-ui-com
 import { Api, toServerUrl } from '../components/apiClient';
 
 function stringifyJsExport(name, value) {
-  // Pretty-print with 2 spaces but keep closer to original style
   const body = JSON.stringify(value, null, 2)
     .replace(/"(\w+)":/g, '"$1":')
     .replace(/\n/g, '\n');
@@ -31,7 +30,6 @@ const ImagePicker = ({ label, value, onChange, uploadParams }) => {
   const handleFile = async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    // Show local preview immediately
     const objUrl = URL.createObjectURL(file);
     setLocalPreview(objUrl);
     try {
@@ -39,13 +37,11 @@ const ImagePicker = ({ label, value, onChange, uploadParams }) => {
       const url = uploaded?.[0]?.url || '';
       if (url) {
         onChange(url);
-        // bump version to bypass cache for constant URLs (e.g., avatar.webp)
         setPreviewVer(Date.now());
       }
     } catch (err) {
       console.error('Image upload failed', err);
     } finally {
-      // Release local preview; server image will render next with cache-bust
       setTimeout(() => {
         try { URL.revokeObjectURL(objUrl); } catch {}
         setLocalPreview('');
@@ -80,12 +76,10 @@ const ImagePicker = ({ label, value, onChange, uploadParams }) => {
   );
 };
 
-// Tailwind-like color names for dropdowns (profile: technologies/categories color)
 const COLOR_OPTIONS = [
   'red','orange','amber','yellow','lime','green','emerald','teal','cyan','sky','blue','indigo','violet','purple','fuchsia','pink','rose','slate','gray','zinc','neutral','stone'
 ];
 
-// Profile form editor
 const ProfileForm = ({ value, onChange }) => {
   const update = (patch) => onChange({ ...value, ...patch });
   return (
@@ -109,7 +103,6 @@ const ProfileForm = ({ value, onChange }) => {
             <Toggle
               checked={!!value.status}
               onChange={(checked) => {
-                // Defer update to avoid setState during Toggle render
                 setTimeout(() => update({ status: checked }), 0);
               }}
             />
@@ -161,7 +154,6 @@ const ProfileForm = ({ value, onChange }) => {
   );
 };
 
-// Minimal array-of-strings editor (for media)
 const StringListEditor = ({ label, values, onChange, placeholder, enableUpload, uploadParams }) => {
   const fileInputRef = useRef(null);
   const remove = (i) => {
@@ -179,7 +171,6 @@ const StringListEditor = ({ label, values, onChange, placeholder, enableUpload, 
     } catch (err) {
       console.error('Bulk upload failed', err);
     }
-    // reset input so same files can be selected again if needed
     e.target.value = '';
   };
   return (
@@ -221,7 +212,6 @@ const StringListEditor = ({ label, values, onChange, placeholder, enableUpload, 
   );
 };
 
-// Generic list editor for arrays of objects with named fields
 const PairListEditor = ({ label, items = [], onChange, fields }) => {
   const add = () => onChange([...(items || []), Object.fromEntries(fields.map(f => [f.key, '']))]);
   const update = (i, key, val) => {
@@ -273,7 +263,6 @@ const PairListEditor = ({ label, items = [], onChange, fields }) => {
   );
 };
 
-// Basic Project editor (core fields)
 const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
   const [index, setIndex] = useState(0);
   const current = projects[index] || {};
@@ -281,14 +270,12 @@ const ProjectsForm = ({ projects, onChange, collaborators = [], profile }) => {
     const next = projects.map((p, i) => (i === index ? { ...p, ...patch } : p));
     onChange(next);
   };
-  // Build dropdown sources from profile
   const profileTechs = Array.isArray(profile?.technologies) ? profile.technologies : [];
   const techNameOptions = profileTechs.map(t => t?.name).filter(Boolean);
   const techColorByName = Object.fromEntries(profileTechs.filter(t => t && t.name).map(t => [t.name, t.color || '']));
   const profileCats = Array.isArray(profile?.categories) ? profile.categories : [];
   const catNameOptions = profileCats.map(c => c?.name).filter(Boolean);
   const catColorByName = Object.fromEntries(profileCats.filter(c => c && c.name).map(c => [c.name, c.color || '']));
-  // Collaborators dropdown options
   const collabNameOptions = ['None', ...((Array.isArray(collaborators) ? collaborators : []).map(c => c?.title).filter(Boolean))];
   const addProject = () => {
     const next = [

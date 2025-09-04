@@ -175,7 +175,7 @@ const CollaboratorDetail = () => {
                             key={p.id}
                             imageSrc={toPublicUrl(p.image)}
                             label={p.title}
-                            description={p.description}
+                            description={p.description.length > 100 ? `${p.description.substring(0, 100)}...` : p.description}
                             onClick={() => navigate(`/projects/${p.id}`)}
                           />
                         ))}
