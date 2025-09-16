@@ -36,10 +36,11 @@ function useExistingIcons(social) {
 }
 
 const CollaboratorCard = ({ collaborator, href, onClick }) => {
+  const existingIcons = useExistingIcons(social); 
+  
   if (!collaborator) return null;
   const { title, description, image, social } = collaborator;
   const clickable = Boolean(href || onClick);
-  const existingIcons = useExistingIcons(social);
 
   const content = (
     <div className={`relative w-[90%] max-w-md mx-auto h-48 border-white border-2 ${clickable ? 'cursor-pointer' : ''}`}>
