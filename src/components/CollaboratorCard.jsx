@@ -36,10 +36,11 @@ function useExistingIcons(social) {
 }
 
 const CollaboratorCard = ({ collaborator, href, onClick }) => {
-  const existingIcons = useExistingIcons(social); 
-  
+
   if (!collaborator) return null;
   const { title, description, image, social } = collaborator;
+  const existingIcons = useExistingIcons(social); 
+  
   const clickable = Boolean(href || onClick);
 
   const content = (
