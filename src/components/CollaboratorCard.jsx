@@ -16,23 +16,44 @@ const CollaboratorCard = ({ collaborator, href, onClick }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute inset-0 p-4 flex flex-col justify-end">
           <h3 className="minecraft-ten text-white text-2xl">{title}</h3>
-          <p className="minecraft-font text-gray-200">{description}</p>
+          <p className="minecraft-font text-gray-200">{description.length > 100 ? `${description.substring(0, 100)}...` : description}</p>
           {Array.isArray(social) && social.length > 0 && (
             <div className="mt-3 flex items-center gap-4">
               {social.map((s, i) => {
                 const key = String(s?.name || '').toLowerCase().replace(/\s+/g, '').replace(/\./g, '');
                 const icon = key ? `techno/${key}.webp` : 'techno/internet.webp';
                 const isUrl = typeof s?.link === 'string' && /^https?:\/\//i.test(s.link);
-                const img = <img src={toPublicUrl(icon)} alt={s?.name || 'link'} className="h-6 w-6 object-contain" title={s?.name} />;
-                return isUrl ? (
-                  <a key={`${key}-${i}`} href={s.link} target="_blank" rel="noreferrer" aria-label={s?.name || 'link'}>
-                    {img}
-                  </a>
-                ) : (
-                  <span key={`${key}-${i}`} aria-label={s?.name || 'text'} title={s?.link || ''}>
-                    {img}
-                  </span>
-                );
+
+                // Use React state to check if image loads
+                const [imgExists, setImgExists] = React.useState(true);
+
+                React.useEffect(() => {
+                  setImgExists(true);
+                }, [icon]);
+
+                const handleError = () => setImgExists(false);
+
+                const img = imgExists ? (
+                  <img
+                    src={toPublicUrl(icon)}
+                    alt={s?.name || 'link'}
+                    className="h-6 w-6 object-contain"
+                    title={s?.name}
+                    onError={handleError}
+                  />
+                ) : null;
+
+                return img ? (
+                  isUrl ? (
+                    <a key={`${key}-${i}`} href={s.link} target="_blank" rel="noreferrer" aria-label={s?.name || 'link'}>
+                      {img}
+                    </a>
+                  ) : (
+                    <span key={`${key}-${i}`} aria-label={s?.name || 'text'} title={s?.link || ''}>
+                      {img}
+                    </span>
+                  )
+                ) : null;
               })}
             </div>
           )}

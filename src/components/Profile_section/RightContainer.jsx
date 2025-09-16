@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Container, Button } from 'mc-ui-comatv';
 import { useNavigate } from 'react-router-dom';
@@ -31,7 +31,7 @@ const CustomImageCard = ({ project }) => {
       <div className="absolute inset-0 z-10 p-4 flex flex-col justify-between">
         <div className="flex flex-col items-start">
           <h3 className="minecraft-ten text-white text-3xl">{project.title}</h3>
-          <p className="w-[30%] mt-1 text-lg">{project.description}</p>
+          <p className="w-[30%] mt-1 text-lg">{project.description.length > 100 ? `${project.description.substring(0, 100)}...` : project.description}</p>
           {project.date && (
             <span className="mt-2 text-green-500">
               {new Date(project.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}
