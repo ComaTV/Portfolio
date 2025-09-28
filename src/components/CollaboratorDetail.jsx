@@ -170,7 +170,9 @@ const CollaboratorDetail = () => {
                         className="sm:grid-cols-2"
                         style={{ gap: 0, padding: 0, margin: 0 }}
                       >
-                        {projects.map((p) => (
+                        {[...projects]
+                          .sort((a, b) => new Date(b.date) - new Date(a.date))
+                          .map((p) => (
                           <ImageCard
                             key={p.id}
                             imageSrc={toPublicUrl(p.image)}
