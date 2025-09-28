@@ -25,7 +25,9 @@ const ProjectsView = ({ projects }) => {
         className="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         style={{ gap: 0, padding: 0, margin: 0 }}
       >
-        {projects.map((project) => {
+        {[...projects]
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .map((project) => {
           let iconImages = project.technologies.map(tech =>
             `techno/${tech.name.toLowerCase().replace('.', '').replace(' ', '')}.webp`
           );
