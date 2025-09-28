@@ -26,7 +26,7 @@ const ProjectsView = ({ projects }) => {
         style={{ gap: 0, padding: 0, margin: 0 }}
       >
         {[...projects]
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
           .map((project) => {
           let iconImages = project.technologies.map(tech =>
             `techno/${tech.name.toLowerCase().replace('.', '').replace(' ', '')}.webp`
@@ -47,6 +47,7 @@ const ProjectsView = ({ projects }) => {
             />
           );
         })}
+
       </Scrollbar>
     </Container>
   );
