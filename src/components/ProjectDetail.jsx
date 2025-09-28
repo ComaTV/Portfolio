@@ -21,7 +21,10 @@ const ProjectDetail = () => {
           Api.getCollaborators().catch(() => [])
         ]);
         if (!mounted) return;
-        setProjectsData(Array.isArray(pJson) ? pJson : []);
+        const sortedProjects = Array.isArray(pJson) 
+          ? [...pJson].sort((a, b) => new Date(b.date) - new Date(a.date)) 
+          : [];
+        setProjectsData(sortedProjects);
         setCollaboratorsData(Array.isArray(cJson) ? cJson : []);
       } catch {
         if (!mounted) return;
