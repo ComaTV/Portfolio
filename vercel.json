@@ -1,5 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "http://start-philosophy.gl.at.ply.gg:26517/$1" }
-  ]
-}
