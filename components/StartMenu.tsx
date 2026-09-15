@@ -1,19 +1,21 @@
+"use client"
+
+import { forwardRef } from "react"
+
 interface StartMenuProps {
     isOpen: boolean;
 }
 
-export default function StartMenu({ isOpen }: StartMenuProps) {
-    if(!isOpen) return null;
+const StartMenu = forwardRef<HTMLDivElement, StartMenuProps>(function StartMenu({ isOpen }, ref) {
+    if (!isOpen) return null;
 
     return (
-        <div className="absolute bottom-20 left-0 w-[40vw] h-[55vh] bg-gray-700 rounded-t shadow-lg">
-            <div className="p-2 space-y-2 w-20 h-full bg-blue-700">
-                <div className="rounded-4xl w-15 h-15 bg-amber-600"></div>
-                <div className="rounded-4xl w-15 h-15 bg-amber-600"></div>
-                <div className="rounded-4xl w-15 h-15 bg-amber-600"></div>
-                <div className="rounded-4xl w-15 h-15 bg-amber-600"></div>
-                <div className="rounded-4xl w-15 h-15 bg-amber-600"></div>
+        <div ref={ref} className="absolute bottom-20 left-0 w-[30vw] h-[45vh] bg-gray-900">
+            <div className="py-4 p-2 w-20 h-full space-y-10 bg-gray-950">
+                <div className="bg-amber-600 rounded-4xl w-15 h-15"/>
             </div>
         </div>
     )
-}
+
+})
+export default StartMenu;
