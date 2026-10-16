@@ -9,12 +9,10 @@ interface SearchMenuProps {
 const SearchMenu = forwardRef<HTMLDivElement, SearchMenuProps>(function SearchMenu({ isOpen }, ref) {
     const [activeTab, setActiveTab] = useState("All");
 
-    if (!isOpen) return null;
-
     const tabs = ["All", "Apps", "Projects"];
 
     return (
-        <div ref={ref} className="absolute bottom-20 left-20 w-[45vw] h-[50vh] bg-gray-900">
+        <div ref={ref} className={`absolute bottom-20 left-20 w-[45vw] h-[50vh] bg-gray-900 ${!isOpen ? 'hidden' : ''}`}>
             <div className="flex justify-start w-full h-20 bg-gray-950">
                 {tabs.map((tab) => (
                     <button
