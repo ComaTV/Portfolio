@@ -19,18 +19,24 @@ const allowedOrigins = (CORS_ALLOWED_ORIGIN || '')
   .split(',')
   .map((s) => normalize(s.trim()))
   .filter(Boolean);
+const isSameOrigin = (req, origin) => {
+  if (!origin) return true;
+  const protocol = req.headers['x-forwarded-proto']?.split(',')[0] || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  return normalize(origin) === normalize(`${protocol}://${host}`);
+};
 
 if (allowedOrigins.length) {
-  app.use(
-    cors({
+  app.use((req, res, next) => {
+    if (isSameOrigin(req, req.headers.origin)) return next();
+    return cors({
       origin: (origin, cb) => {
-        if (!origin) return cb(null, true);
-        const ok = allowedOrigins.includes(normalize(origin));
+        const ok = !origin || allowedOrigins.includes(normalize(origin));
         cb(ok ? null : new Error('Not allowed by CORS'), ok);
       },
       credentials: true,
-    })
-  );
+    })(req, res, next);
+  });
 } else {
   app.use(cors());
 }
@@ -49,7 +55,7 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (!origin) return next();
   res.setHeader('Vary', 'Origin');
-  if (!allowedOrigins.includes(normalize(origin))) {
+  if (!allowedOrigins.includes(normalize(origin)) && !isSameOrigin(req, origin)) {
     if (process.env.NODE_ENV !== 'production') {
       console.warn('Forbidden origin (write):', origin, 'allowed:', allowedOrigins);
     }
