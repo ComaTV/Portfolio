@@ -27,7 +27,7 @@ const formatDate = (value) => new Intl.DateTimeFormat('en', {
   year: 'numeric',
 }).format(new Date(value));
 
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : '')).replace(/\/+$/, '');
 const apiUrl = (path) => `${API_BASE}${path}`;
 const assetUrl = (value) => {
   if (typeof value === 'string') return value.startsWith('/') && API_BASE ? `${API_BASE}${value}` : value;

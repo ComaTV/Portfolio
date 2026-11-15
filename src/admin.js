@@ -28,7 +28,7 @@ const tagsToText = (items = []) => items.map((item) => item.name || item).join('
 const textToTags = (value) => value.split(',').map((name) => name.trim()).filter(Boolean).map((name) => ({ name, color: 'blue' }));
 
 const state = {
-  apiBase: '',
+  apiBase: import.meta.env.PROD ? '/api' : '',
   token: '',
   connected: false,
   active: 'dashboard',
@@ -69,7 +69,11 @@ function toast(message, type = 'success') {
 
 function initialCredentials() {
   const params = new URLSearchParams(location.search);
-  state.apiBase = normalizeBase(params.get('api') || localStorage.getItem('comatv-admin-api') || location.origin);
+  state.apiBase = normalizeBase(
+    params.get('api')
+    || localStorage.getItem('comatv-admin-api')
+    || (import.meta.env.PROD ? '/api' : location.origin),
+  );
   state.token = params.get('token') || params.get('admin_token') || sessionStorage.getItem('comatv-admin-token') || '';
   if (params.has('token') || params.has('admin_token')) {
     params.delete('token');
