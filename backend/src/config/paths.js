@@ -7,5 +7,7 @@ export const uploadsDir = resolve(ROOT_DIR, 'uploads');
 export const PORT = Number(process.env.PORT || 8787);
 export const CORS_ALLOWED_ORIGIN = process.env.CORS_ALLOWED_ORIGIN || '';
 
-mkdirSync(dataDir, { recursive: true });
-mkdirSync(uploadsDir, { recursive: true });
+if (!process.env.VERCEL) {
+  mkdirSync(dataDir, { recursive: true });
+  mkdirSync(uploadsDir, { recursive: true });
+}
