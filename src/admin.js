@@ -28,7 +28,7 @@ const tagsToText = (items = []) => items.map((item) => item.name || item).join('
 const textToTags = (value) => value.split(',').map((name) => name.trim()).filter(Boolean).map((name) => ({ name, color: 'blue' }));
 
 const state = {
-  apiBase: import.meta.env.PROD ? '/api' : '',
+  apiBase: '/api',
   token: '',
   connected: false,
   active: 'dashboard',
@@ -72,7 +72,7 @@ function initialCredentials() {
   state.apiBase = normalizeBase(
     params.get('api')
     || localStorage.getItem('comatv-admin-api')
-    || (import.meta.env.PROD ? '/api' : location.origin),
+    || '/api',
   );
   state.token = params.get('token') || params.get('admin_token') || sessionStorage.getItem('comatv-admin-token') || '';
   if (params.has('token') || params.has('admin_token')) {
@@ -139,7 +139,7 @@ function renderLogin(error = '') {
           <h2>Open control room</h2>
           <p>Use the API address and the temporary token from your secure admin link.</p>
           ${error ? `<div class="form-error">${escapeHTML(error)}</div>` : ''}
-          <label>Backend API URL<input id="api-base" type="url" value="${escapeHTML(state.apiBase)}" placeholder="https://api.example.com" autocomplete="url" required /></label>
+          <label>Backend API URL<input id="api-base" type="text" inputmode="url" value="${escapeHTML(state.apiBase)}" placeholder="/api or https://api.example.com" autocomplete="url" required /></label>
           <label>Admin token<input id="admin-token" type="password" value="${escapeHTML(state.token)}" placeholder="Temporary access token" autocomplete="current-password" required /></label>
           <button class="primary admin-connect" id="connect-button" type="submit">Connect securely ${icon('external', 17)}</button>
           <small>The token is kept only for this browser session.</small>
