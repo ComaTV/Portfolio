@@ -43,6 +43,20 @@ const root = document.querySelector('#admin-app');
 
 const normalizeBase = (value) => value.trim().replace(/\/+$/, '');
 const apiUrl = (path) => `${state.apiBase}${path}`;
+const getStoredApiBase = () => {
+  const stored = localStorage.getItem('comatv-admin-api');
+  if (!stored) return '/api';
+  try {
+    const url = new URL(stored, location.origin);
+    if (url.origin === location.origin && (url.pathname === '/' || url.pathname === '/admin')) {
+      localStorage.removeItem('comatv-admin-api');
+      return '/api';
+    }
+  } catch {
+    return '/api';
+  }
+  return stored;
+};
 
 async function request(path, options = {}) {
   const headers = new Headers(options.headers || {});
@@ -71,7 +85,7 @@ function initialCredentials() {
   const params = new URLSearchParams(location.search);
   state.apiBase = normalizeBase(
     params.get('api')
-    || localStorage.getItem('comatv-admin-api')
+    || getStoredApiBase()
     || '/api',
   );
   state.token = params.get('token') || params.get('admin_token') || sessionStorage.getItem('comatv-admin-token') || '';
@@ -104,20 +118,20 @@ async function connect() {
     renderShell();
     toast('Backend connected.');
   } catch (error) {
+    if (error.message === 'Invalid admin token') {
+      sessionStorage.removeItem('comatv-admin-token');
+      state.token = '';
+    }
     toast(error.message, 'error');
     renderLogin(error.message);
   }
 }
 
 async function loadAll() {
-  const [profile, projects, collaborators] = await Promise.all([
-    request('/profile'),
-    request('/projects'),
-    request('/collaborators'),
-  ]);
-  state.profile = profile;
-  state.projects = Array.isArray(projects) ? projects : [];
-  state.collaborators = Array.isArray(collaborators) ? collaborators : [];
+  const content = await request('/content');
+  state.profile = content?.profile && typeof content.profile === 'object' ? content.profile : {};
+  state.projects = Array.isArray(content?.projects) ? content.projects : [];
+  state.collaborators = Array.isArray(content?.collaborators) ? content.collaborators : [];
 }
 
 function renderLogin(error = '') {
