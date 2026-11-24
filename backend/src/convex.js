@@ -1,5 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 import { dataDir } from './config/paths.js';
 
 const files = {
@@ -30,6 +30,7 @@ async function readLocal(key) {
 }
 
 async function writeLocal(key, value) {
+  await mkdir(dirname(files[key]), { recursive: true });
   await writeFile(files[key], `${JSON.stringify(value, null, 2)}\n`, 'utf8');
   return value;
 }
@@ -56,9 +57,18 @@ async function convexCall(kind, path, args) {
 }
 
 export function createContentStore() {
+  const tryConvex = async (kind, path, args) => {
+    try {
+      return await convexCall(kind, path, args);
+    } catch (error) {
+      console.warn(`Convex ${kind} unavailable:`, error.message);
+      return null;
+    }
+  };
+
   return {
     async getAll() {
-      const remote = await convexCall('query', 'content:getAll', {});
+      const remote = await tryConvex('query', 'content:getAll', {});
       if (remote) return remote;
       const [profile, projects, collaborators] = await Promise.all(
         Object.keys(files).map((key) => readLocal(key)),
@@ -66,15 +76,15 @@ export function createContentStore() {
       return { profile, projects, collaborators };
     },
     async saveProfile(profile) {
-      const remote = await convexCall('mutation', 'content:saveProfile', { profile });
+      const remote = await tryConvex('mutation', 'content:saveProfile', { profile });
       return remote || writeLocal('profile', profile);
     },
     async saveProjects(projects) {
-      const remote = await convexCall('mutation', 'content:replaceProjects', { projects });
+      const remote = await tryConvex('mutation', 'content:replaceProjects', { projects });
       return remote || writeLocal('projects', projects);
     },
     async saveCollaborators(collaborators) {
-      const remote = await convexCall('mutation', 'content:replaceCollaborators', { collaborators });
+      const remote = await tryConvex('mutation', 'content:replaceCollaborators', { collaborators });
       return remote || writeLocal('collaborators', collaborators);
     },
   };
