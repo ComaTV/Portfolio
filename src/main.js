@@ -22,10 +22,15 @@ const escapeHTML = (value = '') => String(value)
   .replaceAll('"', '&quot;')
   .replaceAll("'", '&#039;');
 
-const formatDate = (value) => new Intl.DateTimeFormat('en', {
-  month: 'short',
-  year: 'numeric',
-}).format(new Date(value));
+const formatDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('en', {
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+};
 
 const API_BASE = ((import.meta.env.DEV && import.meta.env.VITE_API_URL) || '/api').replace(/\/+$/, '');
 const apiUrl = (path) => `${API_BASE}${path}`;
@@ -56,15 +61,23 @@ const loadData = async () => {
   const response = await fetch(apiUrl('/content'));
   if (!response.ok) throw new Error(`Portfolio API failed (${response.status})`);
   const content = await response.json();
+  const profile = content.profile && typeof content.profile === 'object' ? content.profile : {};
   const withRemoteAssets = (item) => ({
     ...item,
     image: assetUrl(item.image),
-    media: item.media?.map(assetUrl),
+    media: Array.isArray(item.media) ? item.media.map(assetUrl) : [],
+    technologies: Array.isArray(item.technologies) ? item.technologies : [],
+    linksList: Array.isArray(item.linksList) ? item.linksList : [],
   });
   return {
-    profile: { ...content.profile, avatar: assetUrl(content.profile.avatar) },
-    projects: content.projects.map(withRemoteAssets),
-    collaborators: content.collaborators.map(withRemoteAssets),
+    profile: {
+      ...profile,
+      avatar: assetUrl(profile.avatar),
+      technologies: Array.isArray(profile.technologies) ? profile.technologies : [],
+      social: Array.isArray(profile.social) ? profile.social : [],
+    },
+    projects: Array.isArray(content.projects) ? content.projects.map(withRemoteAssets) : [],
+    collaborators: Array.isArray(content.collaborators) ? content.collaborators.map(withRemoteAssets) : [],
   };
 };
 
@@ -164,13 +177,14 @@ const render = ({ profile, projects, collaborators }) => {
         </div>
         <div class="marquee" aria-label="Core technologies">
           <div class="marquee-track">
-            ${[...profile.technologies, ...profile.technologies].map((technology) => `
+            ${(Array.isArray(profile.technologies) ? [...profile.technologies, ...profile.technologies] : []).map((technology) => `
               <span>${escapeHTML(technology.name)}</span><i></i>
             `).join('')}
           </div>
         </div>
       </section>
 
+      ${featured ? `
       <section class="featured section-shell" aria-labelledby="featured-title">
         <div class="section-heading reveal">
           <div>
@@ -198,6 +212,7 @@ const render = ({ profile, projects, collaborators }) => {
           </div>
         </article>
       </section>
+      ` : ''}
 
       <section class="work section-shell" id="work" aria-labelledby="work-title">
         <div class="section-heading compact reveal">
@@ -288,7 +303,7 @@ const render = ({ profile, projects, collaborators }) => {
       <a class="brand" href="#top"><span>C/</span> ComaTV</a>
       <p>Game & Web Developer</p>
       <div>
-        ${profile.social.filter((item) => item.link.startsWith('http')).map((item) => `<a href="${escapeHTML(item.link)}" target="_blank" rel="noreferrer">${escapeHTML(item.name)}</a>`).join('')}
+        ${profile.social.filter((item) => item?.link?.startsWith('http')).map((item) => `<a href="${escapeHTML(item.link)}" target="_blank" rel="noreferrer">${escapeHTML(item.name)}</a>`).join('')}
       </div>
       <span>© ${new Date().getFullYear()}</span>
     </footer>
