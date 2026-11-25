@@ -134,7 +134,6 @@ async function connect() {
 
 async function loadAll() {
   const content = await request('/content');
-  console.log(JSON.stringify(content));
   state.profile = content?.profile && typeof content.profile === 'object' ? content.profile : {};
   state.projects = Array.isArray(content?.projects) ? content.projects : [];
   state.collaborators = Array.isArray(content?.collaborators) ? content.collaborators : [];
