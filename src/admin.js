@@ -132,6 +132,7 @@ async function loadAll() {
   state.profile = content?.profile && typeof content.profile === 'object' ? content.profile : {};
   state.projects = Array.isArray(content?.projects) ? content.projects : [];
   state.collaborators = Array.isArray(content?.collaborators) ? content.collaborators : [];
+  console.log(JSON.stringify(state))
 }
 
 function renderLogin(error = '') {
