@@ -63,7 +63,12 @@ async function request(path, options = {}) {
   if (state.token) headers.set('x-admin-token', state.token);
   if (!(options.body instanceof FormData) && options.body != null) headers.set('content-type', 'application/json');
   const response = await fetch(apiUrl(path), { ...options, headers });
-  const data = await response.json().catch(() => ({}));
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`API-ul ${apiUrl(path)} nu a returnat JSON. Verifică URL-ul API.`);
+  }
   if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
   return data;
 }
@@ -129,10 +134,10 @@ async function connect() {
 
 async function loadAll() {
   const content = await request('/content');
+  console.log(JSON.stringify(content));
   state.profile = content?.profile && typeof content.profile === 'object' ? content.profile : {};
   state.projects = Array.isArray(content?.projects) ? content.projects : [];
   state.collaborators = Array.isArray(content?.collaborators) ? content.collaborators : [];
-  console.log(JSON.stringify(state))
 }
 
 function renderLogin(error = '') {

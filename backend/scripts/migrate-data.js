@@ -14,12 +14,7 @@ async function runMutation(path, args) {
 
   const response = await fetch(`${convexUrl}/api/mutation`, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      ...(process.env.CONVEX_DEPLOY_KEY
-        ? { authorization: `Bearer ${process.env.CONVEX_DEPLOY_KEY}` }
-        : {}),
-    },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ path, args, format: 'json' }),
   });
   const result = await response.json().catch(() => ({}));

@@ -41,12 +41,7 @@ async function convexCall(kind, path, args) {
 
   const response = await fetch(`${url}/api/${kind}`, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      ...(process.env.CONVEX_DEPLOY_KEY
-        ? { authorization: `Bearer ${process.env.CONVEX_DEPLOY_KEY}` }
-        : {}),
-    },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ path, args, format: 'json' }),
   });
   const result = await response.json().catch(() => ({}));
@@ -57,34 +52,25 @@ async function convexCall(kind, path, args) {
 }
 
 export function createContentStore() {
-  const tryConvex = async (kind, path, args) => {
-    try {
-      return await convexCall(kind, path, args);
-    } catch (error) {
-      console.warn(`Convex ${kind} unavailable:`, error.message);
-      return null;
-    }
-  };
-
   return {
     async getAll() {
-      const remote = await tryConvex('query', 'content:getAll', {});
-      if (remote) return remote;
+      const remote = await convexCall('query', 'content:getAll', {});
+      if (remote !== null) return remote;
       const [profile, projects, collaborators] = await Promise.all(
         Object.keys(files).map((key) => readLocal(key)),
       );
       return { profile, projects, collaborators };
     },
     async saveProfile(profile) {
-      const remote = await tryConvex('mutation', 'content:saveProfile', { profile });
+      const remote = await convexCall('mutation', 'content:saveProfile', { profile });
       return remote || writeLocal('profile', profile);
     },
     async saveProjects(projects) {
-      const remote = await tryConvex('mutation', 'content:replaceProjects', { projects });
+      const remote = await convexCall('mutation', 'content:replaceProjects', { projects });
       return remote || writeLocal('projects', projects);
     },
     async saveCollaborators(collaborators) {
-      const remote = await tryConvex('mutation', 'content:replaceCollaborators', { collaborators });
+      const remote = await convexCall('mutation', 'content:replaceCollaborators', { collaborators });
       return remote || writeLocal('collaborators', collaborators);
     },
   };

@@ -5,7 +5,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://www.coma-tv.site/',
+        target: 'http://localhost:8787',
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
